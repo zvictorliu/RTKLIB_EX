@@ -625,7 +625,7 @@ static void update_stainf(strfile_t *str)
 /* dump station list ---------------------------------------------------------*/
 static void dump_stas(const strfile_t *str)
 {
-#if 1 /* for debug */
+ // #ifdef RTK_DISABLED  // For debug
     stas_t *p;
     double pos[3];
     char s1[40],s2[40];
@@ -644,7 +644,7 @@ static void dump_stas(const strfile_t *str)
               p->sta.rectype,pos[0]*R2D,pos[1]*R2D,pos[2],p->sta.deltype,
               p->sta.del[0],p->sta.del[1],p->sta.del[2]);
     }
-#endif
+  // #endif
 }
 /* add half-cycle ambiguity list ---------------------------------------------*/
 static int add_halfc(strfile_t *str, int sat, int idx, gtime_t time)
@@ -701,7 +701,7 @@ static void update_halfc(strfile_t *str, obsd_t *obs)
 /* dump half-cycle ambiguity list --------------------------------------------*/
 static void dump_halfc(const strfile_t *str)
 {
-#if 0 /* for debug */
+#ifdef RTK_DISABLED
     halfc_t *p;
     char s0[8],s1[40],s2[40],*stats[]={"ADD","SUB","NON"};
     int i,j;
