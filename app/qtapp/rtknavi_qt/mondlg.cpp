@@ -1014,8 +1014,11 @@ void MonitorDialog::setObservations()
     const QString label[] = {tr("Trcv (GPST)"), tr("SAT"), tr("STR")};
     int i, j = 0, width[] = {230, 46, 40};
     int nex = ui->cBSelectObservation->currentIndex() ? NEXOBS : 0;
+    // Show standard deviations when the extended observations are
+    // also selected, but this could be a separate option.
+    int std = ui->cBSelectObservation->currentIndex();
 
-    ui->tWConsole->setColumnCount(3 + (NFREQ + nex) * 6);
+    ui->tWConsole->setColumnCount(3 + (NFREQ + nex) * (6 + std * 2));
     ui->tWConsole->setRowCount(0);
     header.clear();
 
@@ -1034,11 +1037,19 @@ void MonitorDialog::setObservations()
     for (i = 0; i < NFREQ + nex; i++) {
         ui->tWConsole->setColumnWidth(j++, 135 * fontScale / 96);
         header << (i < NFREQ ? tr("P%1 (m)").arg(i+1) : tr("PX%1 (m)").arg(i - NFREQ + 1));
+        if (std) {
+          ui->tWConsole->setColumnWidth(j++, 65 * fontScale / 96);
+          header << tr("Std");
+        }
     }
     for (i = 0; i < NFREQ + nex; i++) {
         ui->tWConsole->setColumnWidth(j++, 160 * fontScale / 96);
         header << (i < NFREQ ? tr("L%1 (cycle)").arg(i+1) : tr("LX%1 (cycle)").arg(i - NFREQ + 1));
-	}
+        if (std) {
+          ui->tWConsole->setColumnWidth(j++, 75 * fontScale / 96);
+          header << tr("Std");
+        }
+    }
     for (i = 0; i < NFREQ + nex; i++) {
         ui->tWConsole->setColumnWidth(j++, 120 * fontScale / 96);
         header << (i < NFREQ ? tr("D%1 (Hz)").arg(i+1) : tr("DX%1 (Hz)").arg(i - NFREQ + 1));
@@ -1057,6 +1068,7 @@ void MonitorDialog::showObservations()
     char tstr[40], id[8], *code;
     int i, k, n = 0, nex = ui->cBSelectObservation->currentIndex() ? NEXOBS : 0;
     int sys = sys_tbl[ui->cBSelectNavigationSystems->currentIndex()];
+    int std = ui->cBSelectObservation->currentIndex();
 
     obsd_t *obs = static_cast<obsd_t *>(calloc(MAXOBS * 2, sizeof(obsd_t)));
     if (obs == NULL) {
@@ -1103,10 +1115,20 @@ void MonitorDialog::showObservations()
             if (obs[i].SNR[k]) ui->tWConsole->item(i, j++)->setText(QString::number(obs[i].SNR[k], 'f', 1));
             else ui->tWConsole->item(i, j++)->setText("-");
         }
-        for (k = 0; k < NFREQ + nex; k++)
+        for (k = 0; k < NFREQ + nex; k++) {
             ui->tWConsole->item(i, j++)->setText(QString::number(obs[i].P[k], 'f', 3));
-        for (k = 0; k < NFREQ + nex; k++)
+            if (std) {
+              if (obs[i].Pstd[k]) ui->tWConsole->item(i, j++)->setText(QString::number(obs[i].Pstd[k], 'f', 3));
+              else ui->tWConsole->item(i, j++)->setText("-");
+            }
+        }
+        for (k = 0; k < NFREQ + nex; k++) {
             ui->tWConsole->item(i, j++)->setText(QString::number(obs[i].L[k], 'f', 3));
+            if (std) {
+              if (obs[i].Lstd[k]) ui->tWConsole->item(i, j++)->setText(QString::number(obs[i].Lstd[k], 'f', 4));
+              else ui->tWConsole->item(i, j++)->setText("-");
+            }
+        }
         for (k = 0; k < NFREQ + nex; k++)
             ui->tWConsole->item(i, j++)->setText(QString::number(obs[i].D[k], 'f', 3));
         for (k = 0; k < NFREQ + nex; k++)
