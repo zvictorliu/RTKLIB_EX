@@ -1565,7 +1565,7 @@ extern void setstr(char *dst, const char *src, int n)
     const char *q=src;
     while (*q&&q<src+n) *p++=*q++;
     *p--='\0';
-    while (p>=dst&&*p==' ') *p--='\0';
+    while (p>=dst&&(*p==' '||*p=='\r'||*p=='\n'||*p=='\t')) *p--='\0';
 }
 /* string to number ------------------------------------------------------------
 * convert substring in string to number
