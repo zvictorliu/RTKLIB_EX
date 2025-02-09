@@ -407,8 +407,7 @@ bool Plot::eventFilter(QObject *obj, QEvent *event)
             QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
             mouseMove(mouseEvent);
             return true;
-        } else
-            ui->lblMessage2->setText("");
+        };
     }
     if (event->type() == QEvent::Resize)
     {
