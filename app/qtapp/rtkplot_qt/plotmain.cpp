@@ -1317,7 +1317,8 @@ void Plot::rangeListItemSelected()
     trace(3, "rangeListItemSelected\n");
 
     lWRangeList->close();
-    rangeListPopupAction->toggle();
+    if(QWidget *p = lWRangeList->parentWidget())
+        p->close();
 
     setRange(0, getYRange());
     updatePlot();
