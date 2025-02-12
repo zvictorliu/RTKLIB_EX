@@ -599,6 +599,11 @@ void Plot::closeEvent(QCloseEvent *)
 
     saveOption();
 
+    for (int sel=0; sel<2; sel++) {
+        freesolbuf(solutionData + sel);
+        freesolstatbuf(solutionStat + sel);
+    }
+
     if (traceLevel > 0) traceclose();
 }
 

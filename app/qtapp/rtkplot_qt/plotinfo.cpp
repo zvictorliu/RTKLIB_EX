@@ -424,7 +424,7 @@ void Plot::updateObservationType()
 void Plot::updatePoint(int x, int y)
 {
     gtime_t time;
-    QPoint p = ui->lblDisplay->mapFromGlobal(QPoint(x, y));
+    QPoint p(x, y);
     double enu[3] = { 0 }, rr[3], pos[3], xx, yy, r, xl[2], yl[2], q[2], az, el;
     int i;
     QString msg;
