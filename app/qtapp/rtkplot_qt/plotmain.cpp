@@ -638,7 +638,7 @@ void Plot::dropEvent(QDropEvent *event)
         return;
 
     foreach(QUrl url, event->mimeData()->urls()) {
-        files.append(QDir::toNativeSeparators(url.toString()));
+        files.append(QDir::toNativeSeparators(url.toLocalFile()));
     }
 
     const QString &file = files.at(0);
@@ -651,13 +651,13 @@ void Plot::dropEvent(QDropEvent *event)
                 readMapData(file);
             else if (plotType == PLOT_SKY || plotType == PLOT_MPS || plotType == PLOT_IONOS)
                 readSkyData(file);
-        };
-    } else if (isObservation(files.at(0))) {
-        readObservation(files);
-    } else if (!ui->btnSolution1->isChecked() && ui->btnSolution2->isChecked()) {
-        readSolution(files, 1);
-    } else {
-        readSolution(files, 0);
+        } else if (isObservation(files.at(0))) {
+            readObservation(files);
+        } else if (!ui->btnSolution1->isChecked() && ui->btnSolution2->isChecked()) {
+            readSolution(files, 1);
+        } else {
+            readSolution(files, 0);
+        }
     }
 }
 // callback on menu-open-solution-1 -----------------------------------------
