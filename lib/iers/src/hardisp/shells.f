@@ -1,21 +1,25 @@
-      SUBROUTINE VMF1 (AH,AW,DMJD,DLAT,ZD,VMF1H,VMF1W)
+      SUBROUTINE SHELLS (X,K,N)
 *+
 *  - - - - - - - - -
-*   V M F 1 
+*   S H E L L S
 *  - - - - - - - - -
 *
 *  This routine is part of the International Earth Rotation and
 *  Reference Systems Service (IERS) Conventions software collection.
 *
-*  This subroutine determines the Vienna Mapping Function 1 (VMF1) (Boehm et al, 2006).
-*  This is the site dependent version. 
+*  The subroutine sorts an array x, of length n, sorting upward,
+*  and returns an array k which may be used to key another array
+*  to the sorted pattern (i.e., if we had an array f to which x
+*  corresponded before sorting, then after calling SHELLS,
+*  f(k(1)) will be the element of f corresponding to the
+*  smallest x, f(k(2)) the next smallest, and so on).
 *
 *  In general, Class 1, 2, and 3 models represent physical effects that
 *  act on geodetic parameters while canonical models provide lower-level
 *  representations or basic computations that are used by Class 1, 2, or
 *  3 models.
 * 
-*  Status: Class 1 model	
+*  Status: Canonical model	
 * 
 *     Class 1 models are those recommended to be used a priori in the
 *     reduction of raw space geodetic data in order to determine
@@ -28,100 +32,97 @@
 *     Class 1, 2, or 3 model.
 *
 *  Given:
-*     AH             d      Hydrostatic coefficient a (Note 1)
-*     AW             d      Wet coefficient a (Note 1)
-*     DMJD           d      Modified Julian Date
-*     DLAT           d      Latitude given in radians (North Latitude)
-*     ZD             d      Zenith distance in radians
+*     x              d      array to be sorted (Note 1)
+*     n              i      length of the input array x
 *
 *  Returned:
-*     VMF1H           d      Hydrostatic mapping function (Note 2)
-*     VMF1W           d      Wet mapping function (Note 2)
-*
+*     k              i      sorted array that may be used to key another 
+*                           array
 *  Notes:
 *
-*  1) The coefficients can be obtained from the primary website
-*     http://ggosatm.hg.tuwien.ac.at/DELAY/ or the back-up website
-*     http://www.hg.tuwien.ac.at/~ecmwf1/. 
+*  1) See the subroutine ADMINT.F header comments for detailed information.
 * 
-*  2) The mapping functions are dimensionless scale factors.
+*  Called:
+*     None
 *
 *  Test case:
-*     given input: AH   = 0.00125711D0 
-*                  AW   = 0.00058801D0
-*                  DMJD = 55055D0
-*                  DLAT = 0.6708665767D0 radians (NRAO, Green Bank, WV)
-*                  ZD   = 1.278564131D0 radians
+*     Not provided for this subroutine.
 *
-*     expected output: VMF1H = 3.425054275537719128D0
-*                      VMF1W = 3.449100942061193553D0
-*                     
 *  References:
-*
-*     Boehm, J., Werl, B., and Schuh, H., (2006), 
-*     "Troposhere mapping functions for GPS and very long baseline
-*     interferometry from European Centre for Medium-Range Weather
-*     Forecasts operational analysis data," J. Geophy. Res., Vol. 111,
-*     B02406, doi:10.1029/2005JB003629
 *
 *     Petit, G. and Luzum, B. (eds.), IERS Conventions (2010),
 *     IERS Technical Note No. 36, BKG (2010)
 *
 *  Revisions:
-*  2005 October 02 J. Boehm          Original code
-*  2009 August 17 B.E. Stetzler      Added header and copyright
-*  2009 August 17 B.E. Stetzler      More modifications and defined twopi
-*  2009 August 17 B.E. Stetzler      Provided test case
-*  2009 August 17 B.E. Stetzler      Capitalized all variables for FORTRAN 77
-*                                    compatibility 
-*  2010 September 08 B.E. Stetzler   Provided new primary website to obtain
-*                                    VMF coefficients
+*  1982 December 29              Revised so that array k is sorted in turn
+*                                
+*  2009 June   05 B.E. Stetzler    Added header and copyright
+*  2009 August 19 B.E. Stetzler    Capitalized all variables for FORTRAN
+*                                  77 compatibility
 *-----------------------------------------------------------------------
 
       IMPLICIT NONE
-     
-      DOUBLE PRECISION AH, AW, DMJD, DLAT, ZD, VMF1H, VMF1W 
 
-      DOUBLE PRECISION DOY, BH, C0H, C11H, C10H, PHH, CH, SINE, BETA,
-     .                 GAMMA, TOPCON, BW, CW, PI, TWOPI
+      INTEGER I,IGAP,IEX,IK,IMAX,IPL,J,K,L,N
+      REAL SV,X
+      DIMENSION X(N),K(N)
 
-      PARAMETER ( PI = 3.1415926535897932384626433D0 )
-      PARAMETER (TWOPI = 6.283185307179586476925287D0)
+      IGAP = N
 
-*+---------------------------------------------------------------------
-*     Reference day is 28 January 1980
-*     This is taken from Niell (1996) to be consistent
-*----------------------------------------------------------------------
-      DOY = DMJD  - 44239D0 + 1 - 28
-      
-      BH = 0.0029D0;
-      C0H = 0.062D0
-      IF (DLAT.LT.0D0) THEN   ! southern hemisphere
-          PHH  = PI
-          C11H = 0.007D0
-          C10H = 0.002D0
-      ELSE                    ! northern hemisphere
-          PHH  = 0D0
-          C11H = 0.005D0
-          C10H = 0.001D0
-      END IF
-      CH = C0H + ((DCOS(DOY/365.25D0*TWOPI + PHH)+1D0)*C11H/2D0 
-     .     + C10H)*(1D0-DCOS(DLAT))
+      DO 1 I = 1,N
+ 1    K(I) = I
+ 5    IF(IGAP.LE.1) GO TO 25
 
+      IGAP = IGAP/2
+      IMAX = N - IGAP
+ 10   IEX = 0
+      DO 20 I = 1,IMAX
+      IPL = I + IGAP
+      IF(X(I).LE.X(IPL)) GO TO 20
+      SV = X(I)
+      IK = K(I)
+      X(I) = X(IPL)
+      K(I) = K(IPL)
+      X(IPL) = SV
+      K(IPL) = IK
+      IEX = IEX + 1
+ 20   CONTINUE
 
-      SINE   = DSIN(PI/2D0 - ZD)
-      BETA   = BH/( SINE + CH  )
-      GAMMA  = AH/( SINE + BETA)
-      TOPCON = (1D0 + AH/(1D0 + BH/(1D0 + CH)))
-      VMF1H   = TOPCON/(SINE+GAMMA)
+      IF(IEX.GT.0) GO TO 10
+      GO TO 5
 
-      BW = 0.00146D0
-      CW = 0.04391D0
-      BETA   = BW/( SINE + CW )
-      GAMMA  = AW/( SINE + BETA)
-      TOPCON = (1D0 + AW/(1D0 + BW/(1D0 + CW)))
-      VMF1W   = TOPCON/(SINE+GAMMA)
-      
+*  Now sort k's (for identical values of x, if any)
+
+ 25   J = 1
+ 30   IF(J.GE.N) RETURN
+      IF(X(J).EQ.X(J+1)) GO TO 33
+      J = J + 1
+      GO TO 30
+*  Have at least two x's with the same value. See how long this is true
+ 33   L = J
+ 35   IF(X(L).NE.X(L+1)) GO TO 38
+      L = L + 1
+      IF(L.LT.N) GO TO 35
+*  j and l are the indices within which x(i) does not change - sort k
+ 38   IGAP = L - J + 1
+ 40   IF(IGAP.LE.1) J = L + 1
+      IF(IGAP.LE.1) GO TO 30
+
+      IGAP = IGAP/2
+      IMAX = L-J+1 - IGAP
+ 45   IEX = 0
+
+      DO 50 I=1,IMAX
+      IPL = I + IGAP + J - 1
+      IF(K(I+J-1).LE.K(IPL)) GO TO 50
+      IK = K(I+J-1)
+      K(I+J-1) = K(IPL)
+      K(IPL) = IK
+      IEX = IEX + 1
+ 50   CONTINUE
+      IF(IEX.GT.0) GO TO 45
+      GO TO 40
+
 * Finished.
 
 *+----------------------------------------------------------------------
@@ -205,4 +206,4 @@
 *
 *
 *-----------------------------------------------------------------------
-      END      
+      END

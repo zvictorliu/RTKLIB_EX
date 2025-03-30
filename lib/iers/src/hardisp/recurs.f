@@ -1,30 +1,22 @@
-      SUBROUTINE VMF1_HT (AH,AW,DMJD,DLAT,HT,ZD,VMF1H,VMF1W)
+      SUBROUTINE RECURS(X,N,HC,NF,OM,SCR)
 *+
 *  - - - - - - - - -
-*   V M F 1 _ H T 
+*   R E C U R S
 *  - - - - - - - - -
 *
 *  This routine is part of the International Earth Rotation and
 *  Reference Systems Service (IERS) Conventions software collection.
 *
-*  This subroutine determines the Vienna Mapping Function 1 (VMF1) (Boehm et al. 2006).
-*
-*     :------------------------------------------:
-*     :                                          :
-*     :                 IMPORTANT                :
-*     :                                          :
-*     :  This version uses height correction!    :
-*     :  It has to be used with the VMF Grid     :
-*     :  located at the website mentioned in     :
-*     :  the Notes.                              :
-*     :__________________________________________:
+*  The purpose of the subroutine is to perform sine and cosine recursion
+*  to fill in data x, of length n, for nf sines and cosines with frequencies
+*  om. 
 *
 *  In general, Class 1, 2, and 3 models represent physical effects that
 *  act on geodetic parameters while canonical models provide lower-level
 *  representations or basic computations that are used by Class 1, 2, or
 *  3 models.
 * 
-*  Status: Class 1 model	
+*  Status: Canonical model	
 * 
 *     Class 1 models are those recommended to be used a priori in the
 *     reduction of raw space geodetic data in order to determine
@@ -36,117 +28,71 @@
 *     Canonical models are accepted as is and cannot be classified as a
 *     Class 1, 2, or 3 model.
 *
-*  Given:
-*     AH             d      Hydrostatic coefficient a (Note 1)
-*     AW             d      Wet coefficient a (Note 1)
-*     DMJD           d      Modified Julian Date
-*     DLAT           d      Latitude given in radians (North Latitude)
-*     HT             d      Ellipsoidal height given in meters
-*     ZD             d      Zenith distance in radians
+*  Given: This is a support routine of the main program HARDISP.F.
+*     x              d      data provided from a file given as standard
+*                           input from the MAIN program HARDISP.F (Note 1)
+*     n              i      length of the data file x
+*     hc             d      array containing alternating cosine and sine
+*                           coefficients
+*     nf             i      number of sine and cosine terms
+*     om             d      sine and cosine frequencies (Note 2)  
 *
 *  Returned:
-*     VMF1H          d      Hydrostatic mapping function (Note 2)
-*     VMF1W          d      Wet mapping function (Note 2)
-*
+*     scr            d      scratch array of length 3 times nf which is
+*                           returned as the recursion cr
 *  Notes:
-* 
-*  1) The coefficients can be obtained from the primary website
-*     http://ggosatm.hg.tuwien.ac.at/DELAY/ or the back-up website
-*     http://www.hg.tuwien.ac.at/~ecmwf1/. 
 *
-*  2) The mapping functions are dimensionless scale factors.
+*  1) See the MAIN program HARDISP.F header comments for detailed information.
+* 
+*  2) The frequencies are normalized so that the Nyquist frequency is pi.
+*
+*  Called:
+*     None
 *
 *  Test case:
-*     given input: AH   = 0.00127683D0 
-*                  AW   = 0.00060955D0
-*                  DMJD = 55055D0
-*                  DLAT = 0.6708665767D0 radians (NRAO, Green Bank, WV)
-*                  HT   = 824.17D0 meters
-*                  ZD   = 1.278564131D0 radians
+*     Not provided for this subroutine.
 *
-*     expected output: VMF1H = 3.423513691014495652D0
-*                      VMF1W = 3.449100942061193553D0
-*                     
 *  References:
-*
-*     Boehm, J., Werl, B., and Schuh, H., (2006), 
-*     "Troposhere mapping functions for GPS and very long baseline
-*     interferometry from European Centre for Medium-Range Weather
-*     Forecasts operational analysis data," J. Geophy. Res., Vol. 111,
-*     B02406, doi:10.1029/2005JB003629
 *
 *     Petit, G. and Luzum, B. (eds.), IERS Conventions (2010),
 *     IERS Technical Note No. 36, BKG (2010)
 *
 *  Revisions:
-*  2005 October 02 J. Boehm     Original code
-*  2009 August 17 B.E. Stetzler Added header and copyright
-*  2009 August 17 B.E. Stetzler More modifications and defined twopi
-*  2009 August 17 B.E. Stetzler Provided test case
-*  2009 August 17 B.E. Stetzler Capitalized all variables for FORTRAN 77
-*                               compatibility
-*  2010 September 08 B.E. Stetzler   Provided new primary website to obtain
-*                                    VMF coefficients 
+*  2009 June 05 B.E. Stetzler    Added header and copyright, used DCOS
+*                                and DSIN exclusively, and replaced END 
+*                                DO statements with CONTINUE statements
+*  2009 August 19 B.E. Stetzler  Capitalized all variables for FORTRAN
+*                                77 compatibility
 *-----------------------------------------------------------------------
 
       IMPLICIT NONE
-     
-      DOUBLE PRECISION AH, AW, DMJD, DLAT, HT, ZD, VMF1H, VMF1W 
+      INTEGER I,J,N,NF
+      REAL X,HC,OM
+      DOUBLE PRECISION SC,SCR
+      DIMENSION X(*),HC(*),SCR(*),OM(*)
 
-      DOUBLE PRECISION DOY, BH, C0H, C11H, C10H, PHH, CH, SINE, BETA,
-     .                 GAMMA, TOPCON, BW, CW, PI, TWOPI, A_HT, B_HT,
-     .                 C_HT, HS_KM, HT_CORR_COEF, HT_CORR
+*  Set up for start of recursion by computing harmonic values
+*  at starting point and just before it
 
-      PARAMETER ( PI = 3.1415926535897932384626433D0 )
-      PARAMETER (TWOPI = 6.283185307179586476925287D0)
+      DO I = 1,NF
+         SCR(3*I-2) = HC(2*I-1)
+         SCR(3*I-1) = HC(2*I-1)*COS(OM(I)) -HC(2*I)*SIN(OM(I))
+         SCR(3*I) = 2.*DCOS(DBLE(OM(I)))
+      ENDDO
 
-*+---------------------------------------------------------------------
-*     Reference day is 28 January 1980
-*     This is taken from Niell (1996) to be consistent
-*----------------------------------------------------------------------
-      DOY = DMJD  - 44239D0 + 1 - 28
-      
-      BH  = 0.0029D0;
-      C0H = 0.062D0
-      IF (DLAT.LT.0D0) THEN   ! southern hemisphere
-          PHH  = PI
-          C11H = 0.007D0
-          C10H = 0.002D0
-      ELSE                    ! northern hemisphere
-          PHH  = 0D0
-          C11H = 0.005D0
-          C10H = 0.001D0
-      END IF
-      CH = C0H + ((DCOS(DOY/365.25D0*TWOPI + PHH)+1D0)*C11H/2D0 
-     .     + C10H)*(1D0-DCOS(DLAT))
+*  Do recursion over data
+      DO I = 1,N
+         X(I) = 0.
+*  Then do recursive computation for each harmonic
+         DO J  = 1,NF
+            X(I) = X(I) + SCR(3*J-2)
+            SC = SCR(3*J-2)
+            SCR(3*J-2) = SCR(3*J)*SC-SCR(3*J-1)
+            SCR(3*J-1) = SC
+         ENDDO
+      ENDDO
+      RETURN
 
-
-      SINE   = DSIN(PI/2D0 - ZD)
-      BETA   = BH/( SINE + CH  )
-      GAMMA  = AH/( SINE + BETA)
-      TOPCON = (1D0 + AW/(1D0 + BW/(1D0 + CW)))
-      VMF1H   = TOPCON/(SINE+GAMMA)
-      
-*  Compute the height correction (Niell, 1996)     
-
-      A_HT = 2.53D-5
-      B_HT = 5.49D-3
-      C_HT = 1.14D-3
-      HS_KM  = HT/1000D0
-      BETA         = B_HT/( SINE + C_HT)
-      GAMMA        = A_HT/( SINE + BETA)
-      TOPCON       = (1D0 + A_HT/(1D0 + B_HT/(1D0 + C_HT)))
-      HT_CORR_COEF = 1D0/SINE - TOPCON/(SINE + GAMMA)
-      HT_CORR      = HT_CORR_COEF * HS_KM
-      VMF1H        = VMF1H + HT_CORR
-
-      BW = 0.00146D0
-      CW = 0.04391D0
-      BETA   = BW/( SINE + CW )
-      GAMMA  = AW/( SINE + BETA)
-      TOPCON = (1D0 + AW/(1D0 + BW/(1D0 + CW)))
-      VMF1W  = TOPCON/(SINE+GAMMA)
-      
 * Finished.
 
 *+----------------------------------------------------------------------
@@ -230,4 +176,4 @@
 *
 *
 *-----------------------------------------------------------------------
-      END      
+      END
