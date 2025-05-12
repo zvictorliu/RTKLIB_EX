@@ -570,7 +570,7 @@ static int decode_bdsephemerisb(raw_t *raw)
 /* decode bd2ephemb ----------------------------------------------------------*/
 static int decode_bd2ephemb(raw_t *raw)
 {
-    unsigned char *p=raw->buff+UNICOREHLEN;
+    unsigned char *p=raw->buff+TERSUSHLEN;
     eph_t eph={0};
     char *msg;
     double tow,toc,n,ura,tt;
@@ -578,7 +578,7 @@ static int decode_bd2ephemb(raw_t *raw)
 
     trace(3,"decode_bd2ephemb: len=%d\n",raw->len);
 
-    if (raw->len<UNICOREHLEN+232) {
+    if (raw->len<TERSUSHLEN+232) {
         trace(2,"tersus bd2ephemb length error: len=%d\n",raw->len);
         return -1;
     }
