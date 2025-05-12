@@ -668,7 +668,6 @@ void __fastcall TMainForm::SaveOpt(void)
 //---------------------------------------------------------------------------
 void __fastcall TMainForm::LoadUrl(AnsiString file)
 {
-    FILE *fp;
     url_t *urls;
     char *p,*subtype,sel[]="*",*sels[]={sel};
     int i,j,n;
