@@ -810,13 +810,18 @@ static void freeobsnav(obs_t *obs, nav_t *nav)
 static int avepos(double *ra, int rcv, const obs_t *obs, const nav_t *nav,
                   const prcopt_t *opt)
 {
-    obsd_t data[MAXOBS];
     gtime_t ts={0};
     sol_t sol={{0}};
     int i,j,n=0,m,iobs;
     char msg[128];
 
     trace(3,"avepos: rcv=%d obs.n=%d\n",rcv,obs->n);
+
+    obsd_t *data = (obsd_t *)calloc(MAXOBS, sizeof(obsd_t));
+    if (data == NULL) {
+      trace(1, "avepos: obsd_t alloc failed\n");
+      return 0;
+    }
 
     for (i=0;i<3;i++) ra[i]=0.0;
 
@@ -834,6 +839,7 @@ static int avepos(double *ra, int rcv, const obs_t *obs, const nav_t *nav,
         for (i=0;i<3;i++) ra[i]+=sol.rr[i];
         n++;
     }
+    free(data);
     if (n<=0) {
         trace(1,"no average of base station position\n");
         return 0;

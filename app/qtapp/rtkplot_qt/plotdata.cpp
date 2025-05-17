@@ -153,7 +153,6 @@ void Plot::readSolutionStat(const QStringList &files, int sel)
 void Plot::readObservation(const QStringList &files)
 {
     obs_t obs = {};
-    nav_t nav = {};
     sta_t sta = {};
     int nobs;
 
@@ -166,14 +165,22 @@ void Plot::readObservation(const QStringList &files)
     readWaitStart();
     showLegend(QStringList());
 
-    if ((nobs = readObservationRinex(files, &obs, &nav, &sta)) <= 0) {
+    nav_t *nav = static_cast<nav_t *>(calloc(1, sizeof(nav_t)));
+    if (nav == NULL) {
+      trace(1, "Plot::readObservation nav alloc failed\n");
+      return;
+    }
+
+    if ((nobs = readObservationRinex(files, &obs, nav, &sta)) <= 0) {
         readWaitEnd();
+        free(nav);
         return;
     }
     clearObservation();
 
     observation = obs;
-    navigation = nav;
+    navigation = *nav;
+    free(nav);
     station = sta;
     simulatedObservation = 0;
 
