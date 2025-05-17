@@ -3927,6 +3927,12 @@ extern void antmodel_s(const pcv_t *pcv, double nadir, double *dant)
     }
     trace(4,"antmodel_s: dant=%6.3f %6.3f\n",dant[0],dant[1]);
 }
+// Free the pcv array.
+void free_pcvs(pcvs_t *pcvs) {
+  free(pcvs->pcv);
+  pcvs->pcv = NULL;
+  pcvs->n = pcvs->nmax = 0;
+}
 
 /* Sun and moon position in ECI (ref [4] 5.1.1, 5.2.1) -----------------------*/
 int epv00(double date1, double date2, double pvh[2][3], double pvb[2][3]);
