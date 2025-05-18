@@ -607,8 +607,8 @@ static int cmdopts(int argc, char **argv, rnxopt_t *opt, char **ifile,
     
     if (opt->trtcm.time == 0) {
         // Use the start or end time if supplied. Otherwise use the file time.
-        if (opt->ts.time != 0) opt->trtcm.time = ts;
-        else if (opt->te.time != 0) opt->trtcm.time = te;
+        if (opt->ts.time != 0) opt->trtcm = opt->ts;
+        else if (opt->te.time != 0) opt->trtcm = opt->te;
         else get_filetime(*ifile, &opt->trtcm);
     }
     if (*fmt) {
