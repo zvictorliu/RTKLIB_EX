@@ -2250,8 +2250,7 @@ void __fastcall TMainForm::SaveLog(void)
     opt.posf=posf[SolType];
     if (SolOpt.outhead) {
         fprintf(fp,"%% program   : %s ver.%s %s\n",PRGNAME,VER_RTKLIB,PATCH_LEVEL);
-        if (PrcOpt.mode==PMODE_DGPS||PrcOpt.mode==PMODE_KINEMA||
-            PrcOpt.mode==PMODE_STATIC) {
+        if (PrcOpt.mode>=PMODE_DGPS && PrcOpt.mode<=PMODE_FIXED) {
             ecef2pos(PrcOpt.rb,pos);
             fprintf(fp,"%% ref pos   :%13.9f %14.9f %10.4f\n",pos[0]*R2D,
                     pos[1]*R2D,pos[2]);
