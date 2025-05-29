@@ -476,7 +476,7 @@ object ConvOptDialog: TConvOptDialog
     Style = csDropDownList
     ItemIndex = 0
     TabOrder = 2
-    Text = '3.03'
+    Text = '3.04'
     OnChange = RnxVerChange
     Items.Strings = (
       '2.10'
