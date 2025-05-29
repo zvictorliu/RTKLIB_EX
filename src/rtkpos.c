@@ -492,7 +492,7 @@ static void udpos(rtk_t *rtk, double tt)
         return;
     }
     /* initialize position for first epoch */
-    if (norm(rtk->x,3)<=0.0) {
+    if (norm(rtk->x, 3) <= RE_WGS84 / 2) {
         trace(3,"rr_init=");tracemat(3,rtk->sol.rr,1,6,15,6);
         for (i=0;i<3;i++) initx(rtk,rtk->sol.rr[i],VAR_POS,i);
         if (rtk->opt.dynamics) {
@@ -1028,7 +1028,7 @@ static int zdres(int base, const obsd_t *obs, int n, const double *rs,
     /* init residuals to zero */
     for (i=0;i<n*nf*2;i++) y[i]=0.0;
 
-    if (norm(rr,3)<=0.0) return 0; /* no receiver position */
+    if (norm(rr, 3) <= RE_WGS84/2) return 0; /* No receiver position */
 
     /* rr_ = local copy of rcvr pos */
     for (i=0;i<3;i++) rr_[i]=rr[i];
