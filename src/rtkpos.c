@@ -2143,7 +2143,10 @@ static int relpos(rtk_t *rtk, const obsd_t *obs, int nu, int nr,
 
                     /* hold integer ambiguity if meet minfix count */
                     if (++rtk->nfix>=rtk->opt.minfix) {
-                        if (rtk->opt.modear==ARMODE_FIXHOLD||rtk->opt.glomodear==GLO_ARMODE_FIXHOLD)
+                        // Note that the modear needs to be fix-and-hold in
+                        // order for glomodear fix-and-hold to be applied here,
+                        // to prevent glomodear alone forcing fix-and-hold.
+                        if (rtk->opt.modear==ARMODE_FIXHOLD)
                             holdamb(rtk,xa);
                         /* switch to kinematic after qualify for hold if in static-start mode */
                         if (rtk->opt.mode==PMODE_STATIC_START) {
