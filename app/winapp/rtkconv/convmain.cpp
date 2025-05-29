@@ -1041,7 +1041,7 @@ void __fastcall TMainWindow::LoadOpt(void)
 {
 	TIniFile *ini=new TIniFile(IniFile);
 	AnsiString opt,mask=
-        "11111111111111111111111111111111111111111111111111111111111111111111";
+        "1111111111111111111111111111111111111111111111111111111111111111111111";
 	
 	RnxVer				=ini->ReadInteger("opt","rnxver",	   7);
 	RnxFile				=ini->ReadInteger("opt","rnxfile",	   0);
