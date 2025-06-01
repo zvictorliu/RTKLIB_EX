@@ -100,7 +100,8 @@ void __fastcall TMainForm::FormShow(TObject *Sender)
     cmd=GetCommandLine();
     strcpy(buff,cmd.c_str());
     
-    for (p=strtok(buff," ");p&&argc<32;p=strtok(NULL," ")) {
+    char *sptr;
+    for (p=strtok_r(buff," ",&sptr);p&&argc<32;p=strtok_r(NULL," ",&sptr)) {
         argv[argc++]=p;
     }
     if (argc>=2) url=argv[1];
@@ -139,7 +140,8 @@ void __fastcall TMainForm::FormShow(TObject *Sender)
     for (int i=0;i<10;i++) {
         stas=ini->ReadString("sta",s.sprintf("station%d",i),"");
         strcpy(buff,stas.c_str());
-        for (p=strtok(buff,",");p;p=strtok(NULL,",")) {
+        char *sptr;
+        for (p=strtok_r(buff,",",&sptr);p;p=strtok_r(NULL,",",&sptr)) {
             StaList->Add(p);
         }
     }
@@ -386,7 +388,8 @@ void __fastcall TMainForm::UpdateCaster(void)
 		n=q-p<MAXLINE-1?q-p:MAXLINE-1;
 		strncpy(buff,p,n); buff[n]='\0';
 		if (strncmp(buff,"CAS",3)) continue;
-		for (i=0,r=strtok(buff,";");i<3&&p;i++,r=strtok(NULL,";")) item[i]=r;
+                char *sptr;
+		for (i=0,r=strtok_r(buff,";",&sptr);i<3&&r;i++,r=strtok_r(NULL,";",&sptr)) item[i]=r;
 		Address->AddItem(item[1]+":"+item[2],NULL);
 	}
 	if (Address->Items->Count>1) Address->Text=Address->Items->Strings[1];
