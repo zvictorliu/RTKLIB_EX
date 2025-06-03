@@ -590,11 +590,33 @@ void __fastcall TMainWindow::BtnAboutClick(TObject *Sender)
 // callback on button-time-start --------------------------------------------
 void __fastcall TMainWindow::TimeStartFClick(TObject *Sender)
 {
+	if (TimeStartF->Checked && TimeEndF->Checked) {
+          // Initialize the start time to the end time if the start
+          // time has just been enabled and is out of order.
+          gtime_t ts={0},te={0};
+          double tint=0.0,tunit=0.0;
+          GetTime(&ts,&te,&tint,&tunit);
+          if (timediff(te, ts) < 0.0) {
+            TimeY1->Text = TimeY2->Text;
+            TimeH1->Text = TimeH2->Text;
+          }
+        }
 	UpdateEnable();
 }
 // callback on button-time-end ----------------------------------------------
 void __fastcall TMainWindow::TimeEndFClick(TObject *Sender)
 {
+	if (TimeStartF->Checked && TimeEndF->Checked) {
+          // Initialize the end time to the start time if the end time
+          // has just been enabled and is out of order.
+          gtime_t ts={0},te={0};
+          double tint=0.0,tunit=0.0;
+          GetTime(&ts,&te,&tint,&tunit);
+          if (timediff(te, ts) < 0.0) {
+            TimeY2->Text = TimeY1->Text;
+            TimeH2->Text = TimeH1->Text;
+          }
+        }
 	UpdateEnable();
 }
 // callback on button-time-interval -----------------------------------------
