@@ -180,7 +180,7 @@ static void outheader(FILE *fp, const char **file, int n, const prcopt_t *popt,
         outprcopt(fp,popt);
     }
     if (PMODE_DGPS<=popt->mode&&popt->mode<=PMODE_FIXED&&popt->mode!=PMODE_MOVEB) {
-        fprintf(fp,"%s ref pos   :",COMMENTH);
+        fprintf(fp,"%s ref pos   : ",COMMENTH);
         outrpos(fp,popt->rb,sopt);
         fprintf(fp,"\n");
     }
