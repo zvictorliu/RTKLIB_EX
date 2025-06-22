@@ -1284,10 +1284,19 @@ void Plot::updateMp()
 
     for (i = 0; i < observation.n; i++) {
         data = observation.data + i;
-        freq1 = sat2freq(data->sat, data->code[0], &navigation);
-        freq2 = sat2freq(data->sat, data->code[1], &navigation);
-        if (data->L[0] == 0.0 || data->L[1] == 0.0 || freq1 == 0.0 || freq2 == 0.0) continue;
-        I = -CLIGHT * (data->L[0] / freq1-data->L[1] / freq2) / (1.0 - SQR(freq1 / freq2));
+        /* choose two frequencies to calculate reference I */
+        for (j = 0; j < NFREQ + NEXOBS; j++) {
+            freq1 = sat2freq(data->sat, data->code[j], &navigation);
+            if (data->L[j] == 0.0 || freq1 == 0.0 ) continue;
+            for (k = j + 1; k < NFREQ + NEXOBS; k++) {
+                freq2 = sat2freq(data->sat, data->code[k], &navigation);
+                if (data->L[k] == 0.0 || freq2 == 0.0 || freq1 == freq2) continue;
+                I = -CLIGHT * (data->L[j] / freq1-data->L[k] / freq2) / (1.0 - SQR(freq1 / freq2));
+                break;
+            }
+            break;
+        }
+        if (freq1 == 0.0 || freq2 == 0.0) continue;
 
         for (j = 0; j < NFREQ + NEXOBS; j++) {
             freq = sat2freq(data->sat, data->code[j], &navigation);
