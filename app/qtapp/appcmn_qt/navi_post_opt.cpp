@@ -20,6 +20,7 @@
 #include "keydlg.h"
 #include "helper.h"
 #include "doubleunitvalidator.h"
+#include "excludedsatellitevalidator.h"
 
 #include "ui_navi_post_opt.h"
 
@@ -215,6 +216,8 @@ OptDialog::OptDialog(QWidget *parent, int opts)
     dirCompleter->setModel(dirModel);
     ui->lELocalDirectory->setCompleter(dirCompleter);
 
+    ui->lEExcludedSatellites->setValidator(new ExcludedSatelliteValidator(this));
+
     // station position file line edit actions
     QAction *acStationPositionFileSelect = ui->lEStationPositionFile->addAction(QIcon(":/buttons/folder"), QLineEdit::TrailingPosition);
     acStationPositionFileSelect->setToolTip(tr("Select File"));
@@ -315,6 +318,7 @@ OptDialog::OptDialog(QWidget *parent, int opts)
     connect(ui->lERoverPosition1, &QLineEdit::textChanged, this, &OptDialog::checkLineEditValidator);
     connect(ui->lERoverPosition2, &QLineEdit::textChanged, this, &OptDialog::checkLineEditValidator);
     connect(ui->lERoverPosition3, &QLineEdit::textChanged, this, &OptDialog::checkLineEditValidator);
+    connect(ui->lEExcludedSatellites, &QLineEdit::textChanged, this, &OptDialog::checkLineEditValidator);
     connect(ui->cBAmbiguityResolution, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &OptDialog::updateEnable);
     connect(ui->cBRoverAntennaPcv, &QCheckBox::clicked, this, &OptDialog::updateEnable);
     connect(ui->cBReferenceAntennaPcv, &QCheckBox::clicked, this, &OptDialog::updateEnable);
@@ -2004,6 +2008,7 @@ bool OptDialog::fillExcludedSatellites(prcopt_t *prcopt, const QString &excluded
         foreach (QString sat, excludedSatellites.split(' ')) {
             unsigned char ex;
             int satNo;
+            if (sat.length() == 0) continue;
             if (sat[0] == '+')
             {
                 ex = 2;
