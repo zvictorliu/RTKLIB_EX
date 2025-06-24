@@ -1098,9 +1098,9 @@ void __fastcall TMainWindow::LoadOpt(void)
 	TimeStartF ->Checked=ini->ReadInteger("set","timestartf",  0);
 	TimeEndF   ->Checked=ini->ReadInteger("set","timeendf",    0);
 	TimeIntF   ->Checked=ini->ReadInteger("set","timeintf",    0);
-	TimeY1	   ->Text	=ini->ReadString ("set","timey1",	  "2020/01/01");
+	TimeY1	   ->Text	=ini->ReadString ("set","timey1",	  "2025/01/01");
 	TimeH1	   ->Text	=ini->ReadString ("set","timeh1",	  "00:00:00"  );
-	TimeY2	   ->Text	=ini->ReadString ("set","timey2",	  "2020/01/01");
+	TimeY2	   ->Text	=ini->ReadString ("set","timey2",	  "2025/01/01");
 	TimeH2	   ->Text	=ini->ReadString ("set","timeh2",	  "00:00:00"  );
 	TimeInt    ->Text	=ini->ReadString ("set","timeint",	 "1");
 	TimeUnitF  ->Checked=ini->ReadInteger("set","timeunitf",   0);
