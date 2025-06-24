@@ -840,7 +840,6 @@ object OptDialog: TOptDialog
         Width = 152
         Height = 21
         Style = csDropDownList
-        Enabled = False
         ItemIndex = 0
         TabOrder = 0
         Text = 'Lat/Lon/Height'
@@ -947,7 +946,6 @@ object OptDialog: TOptDialog
         Width = 75
         Height = 21
         Style = csDropDownList
-        Enabled = False
         ItemIndex = 0
         TabOrder = 2
         Text = 'OFF'
