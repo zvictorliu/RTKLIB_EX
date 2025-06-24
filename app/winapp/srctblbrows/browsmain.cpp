@@ -107,7 +107,9 @@ void __fastcall TMainForm::FormShow(TObject *Sender)
     if (argc>=2) url=argv[1];
 	
 	Caption=title.sprintf("%s ver.%s %s",PRGNAME,VER_RTKLIB,PATCH_LEVEL);
-	
+
+        // There appears to be a line length limit of around 2048 characters
+        // for the init files and that can truncate this loaded list.
 	list=ini->ReadString("srctbl","addrlist","");
 	for (p=list.c_str();*p;) {
 		if (!(q=strchr(p,'@'))) break;
@@ -462,6 +464,8 @@ void __fastcall TMainForm::ShowTable(void)
 	for (p=SrcTable.c_str(),j=1;*p;p=q+1) {
 		if (!(q=strchr(p,'\n'))) break;
 		n=q-p<MAXLINE-1?q-p:MAXLINE-1;
+                // Strip a trailing carriage return.
+                if (n > 0 && p[n - 1] == '\r') n--;
 		strncpy(buff,p,n); buff[n]='\0';
 		switch (type) {
 			case 0: if (!strncmp(buff,"STR",3)) break; else continue;

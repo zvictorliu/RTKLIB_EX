@@ -424,7 +424,7 @@ void __fastcall TMonitorDialog::ShowRtk(void)
 	if (rtk.opt.navsys&SYS_SBS) navsys=navsys+"SBAS ";
 	
 	Label->Caption="";
-	Tbl->RowCount=54+NFREQ*2;
+	Tbl->RowCount=55+NFREQ*2;
 	
 	i=1;
 	Tbl->Cells[0][i  ]="RTKLIB Version";
