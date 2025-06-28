@@ -166,7 +166,7 @@ static strfile_t *gen_strfile(int format, const char *opt)
     
     trace(3,"init_strfile:\n");
     
-    if (!(str=(strfile_t *)calloc(sizeof(strfile_t),1))) return NULL;
+    if (!(str=(strfile_t *)calloc(1, sizeof(strfile_t)))) return NULL;
     
     str->format=format;
     str->staid=-1;
@@ -605,7 +605,7 @@ static void update_stas(strfile_t *str)
     stas_t *p;
     
     if (!str->stas||str->stas->staid!=str->staid) { /* station ID changed */
-        if (!(p=(stas_t *)calloc(sizeof(stas_t),1))) return;
+        if (!(p=(stas_t *)calloc(1, sizeof(stas_t)))) return;
         p->staid=str->staid;
         p->ts=p->te=str->time;
         p->next=str->stas;
@@ -651,7 +651,7 @@ static int add_halfc(strfile_t *str, int sat, int idx, gtime_t time)
 {
     halfc_t *p;
     
-    if (!(p=(halfc_t *)calloc(sizeof(halfc_t),1))) return 0;
+    if (!(p=(halfc_t *)calloc(1, sizeof(halfc_t)))) return 0;
     p->ts=p->te=time;
     p->stat=0;
     p->next=str->halfc[sat-1][idx];
