@@ -23,12 +23,23 @@ extern "C" {
     }
 }
 //---------------------------------------------------------------------------
-const char *PTypes[] = {
-    QT_TRANSLATE_NOOP("Plot", "Ground Track"), QT_TRANSLATE_NOOP("Plot", "Position"), QT_TRANSLATE_NOOP("Plot", "Velocity"), QT_TRANSLATE_NOOP("Plot", "Acceleration"),
-    QT_TRANSLATE_NOOP("Plot", "NSat"), QT_TRANSLATE_NOOP("Plot", "Residuals"), QT_TRANSLATE_NOOP("Plot", "Residuals-El"),
-    QT_TRANSLATE_NOOP("Plot", "Sat Visibility"), QT_TRANSLATE_NOOP("Plot", "Skyplot"),  QT_TRANSLATE_NOOP("Plot", "DOP/NSat"), QT_TRANSLATE_NOOP("Plot", "SNR/MP/El"),
-    QT_TRANSLATE_NOOP("Plot", "SNR/MP-El"), QT_TRANSLATE_NOOP("Plot", "MP-Skyplot"),  QT_TRANSLATE_NOOP("Plot", "Iono-Skyplot"), ""
-};
+const char *PTypes[] = {QT_TRANSLATE_NOOP("Plot", "Ground Track"),
+                        QT_TRANSLATE_NOOP("Plot", "Position"),
+                        QT_TRANSLATE_NOOP("Plot", "Velocity"),
+                        QT_TRANSLATE_NOOP("Plot", "Acceleration"),
+                        QT_TRANSLATE_NOOP("Plot", "NSat"),
+                        QT_TRANSLATE_NOOP("Plot", "Skyplot"),
+                        QT_TRANSLATE_NOOP("Plot", "DOP/NSat"),
+                        QT_TRANSLATE_NOOP("Plot", "Residuals"),
+                        QT_TRANSLATE_NOOP("Plot", "Residuals-El"),
+                        QT_TRANSLATE_NOOP("Plot", "Sat Visibility"),
+                        QT_TRANSLATE_NOOP("Plot", "Skyplot obs"),
+                        QT_TRANSLATE_NOOP("Plot", "DOP/NSat obs"),
+                        QT_TRANSLATE_NOOP("Plot", "SNR/MP/El"),
+                        QT_TRANSLATE_NOOP("Plot", "SNR/MP-El"),
+                        QT_TRANSLATE_NOOP("Plot", "MP-Skyplot"),
+                        QT_TRANSLATE_NOOP("Plot", "Iono-Skyplot"),
+                        ""};
 // show message in status-bar -----------------------------------------------
 void Plot::showMessage(const QString &msg)
 {
@@ -125,7 +136,8 @@ bool Plot::getCenterPosition(double *rr)
 
     trace(3, "getCenterPosition\n");
 
-    if (PLOT_OBS <= plotType && plotType <= PLOT_DOP && plotType != PLOT_TRK) return false;
+    if (PLOT_OBS <= plotType && plotType <= PLOT_DOP && plotType != PLOT_TRK)
+      return false;
     if (norm(originPosition, 3) <= 0.0) return false;
     
     graphTrack->getCenter(xc, yc);
