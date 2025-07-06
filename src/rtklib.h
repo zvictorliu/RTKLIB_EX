@@ -1862,6 +1862,7 @@ EXPORT int postpos(gtime_t ts, gtime_t te, double ti, double tu,
                    const prcopt_t *popt, const solopt_t *sopt,
                    const filopt_t *fopt, const char **infile, int n, const char *outfile,
                    const char *rov, const char *base);
+EXPORT int getstapos(const char *file, const char *name, double *r);
 
 /* stream server functions ---------------------------------------------------*/
 EXPORT void strsvrinit (strsvr_t *svr, int nout);

@@ -847,47 +847,14 @@ static int avepos(double *ra, int rcv, const obs_t *obs, const nav_t *nav,
     for (i=0;i<3;i++) ra[i]/=n;
     return 1;
 }
-/* station position from file ------------------------------------------------*/
-static int getstapos(const char *file, const char *name, double *r)
-{
-    FILE *fp;
-    char buff[256],sname[256],*p;
-    const char *q;
-    double pos[3];
 
-    trace(3,"getstapos: file=%s name=%s\n",file,name);
-
-    if (!(fp=fopen(file,"r"))) {
-        trace(1,"station position file open error: %s\n",file);
-        return 0;
-    }
-    while (fgets(buff,sizeof(buff),fp)) {
-        if ((p=strchr(buff,'%'))) *p='\0';
-        
-        if (sscanf(buff,"%lf %lf %lf %255s",pos,pos+1,pos+2,sname)<4) continue;
-        
-        for (p=sname,q=name;*p&&*q;p++,q++) {
-            if (toupper((int)*p)!=toupper((int)*q)) break;
-        }
-        if (!*p) {
-            pos[0]*=D2R;
-            pos[1]*=D2R;
-            pos2ecef(pos,r);
-            fclose(fp);
-            return 1;
-        }
-    }
-    fclose(fp);
-    trace(1,"no station position: %s %s\n",name,file);
-    return 0;
-}
 /* antenna phase center position ---------------------------------------------*/
 static int antpos(prcopt_t *opt, int rcvno, const obs_t *obs, const nav_t *nav,
-                  const sta_t *sta, const char *posfile)
+                  const sta_t *stas, const char *posfile)
 {
     double *rr=rcvno==1?opt->ru:opt->rb,del[3],pos[3],dr[3]={0};
     int i,postype=rcvno==1?opt->rovpos:opt->refpos;
-    char *name;
+    const char *name;
 
     trace(3,"antpos  : rcvno=%d\n",rcvno);
 
