@@ -1025,7 +1025,7 @@ static int screent_ttol(gtime_t time, gtime_t ts, gtime_t te, double tint,
 static int cmpobs(const void *p1, const void *p2)
 {
     obsd_t *obs1 = (obsd_t *)p1, *obs2 = (obsd_t *)p2;
-    return obs1->sat > obs2->sat;
+    return obs1->sat - obs2->sat;
 }
 /* convert observation data --------------------------------------------------*/
 static void convobs(FILE **ofp, rnxopt_t *opt, strfile_t *str, int *n,
