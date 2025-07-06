@@ -145,7 +145,6 @@ void __fastcall TPlot::ReadSolStat(TStrings *files, int sel)
 void __fastcall TPlot::ReadObs(TStrings *files)
 {
     obs_t obs={0};
-    nav_t nav={0};
     sta_t sta={0};
     AnsiString s;
     char file[1024];
@@ -158,13 +157,21 @@ void __fastcall TPlot::ReadObs(TStrings *files)
     ReadWaitStart();
     ShowLegend(NULL);
     
-    if ((nobs=ReadObsRnx(files,&obs,&nav,&sta))<=0) {
+    nav_t *nav = static_cast<nav_t *>(calloc(1, sizeof(nav_t)));
+    if (nav == NULL) {
+      trace(1, "TPlot::ReadObs nav alloc failed\n");
+      return;
+    }
+
+    if ((nobs=ReadObsRnx(files,&obs,nav,&sta))<=0) {
         ReadWaitEnd();
+        free(nav);
         return;
     }
     ClearObs();
     Obs=obs;
-    Nav=nav;
+    Nav=*nav;
+    free(nav);
     Sta=sta;
     SimObs=0;
     UpdateObs(nobs);
