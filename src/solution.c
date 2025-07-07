@@ -1025,7 +1025,13 @@ static int cmpsolstat(const void *p1, const void *p2)
 {
     solstat_t *q1=(solstat_t *)p1,*q2=(solstat_t *)p2;
     double tt=timediff(q1->time,q2->time);
-    return tt<-0.0?-1:(tt>0.0?1:0);
+    if (tt < -0.0) return -1;
+    if (tt > 0.0) return 1;
+    if (q1->sat < q2->sat) return -1;
+    if (q1->sat > q2->sat) return 1;
+    if (q1->frq < q2->frq) return -1;
+    if (q1->frq > q2->frq) return 1;
+    return 0;
 }
 /* sort solution data --------------------------------------------------------*/
 static int sort_solstat(solstatbuf_t *statbuf)
@@ -1115,7 +1121,7 @@ static int readsolstatdata(FILE *fp, gtime_t ts, gtime_t te, double tint,
     char buff[MAXSOLLEN+1];
     
     trace(3,"readsolstatdata:\n");
-    
+
     while (fgets(buff,sizeof(buff),fp)) {
         
         /* decode solution status */
