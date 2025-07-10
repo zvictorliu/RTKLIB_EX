@@ -923,15 +923,16 @@ static int decode_nav(raw_t *raw, int sat, int off)
     return 0;
 }
 /* decode Galileo I/NAV navigation data --------------------------------------*/
-static int decode_enav(raw_t *raw, int sat, int off)
+static int decode_inav(raw_t *raw, int sat, int off)
 {
+    if (strstr(raw->opt, "-GALFNAV")) return 0;
     eph_t eph={0};
     double ion[4]={0},utc[8]={0};
     uint8_t *p=raw->buff+6+off,buff[32],crc_buff[26]={0};
     int i,j,part1,page1,part2,page2,type;
     
     if (raw->len<40+off) {
-        trace(2,"ubx rxmsfrbx enav length error: sat=%d len=%d\n",sat,raw->len);
+        trace(2,"ubx rxmsfrbx inav length error: sat=%d len=%d\n",sat,raw->len);
         return -1;
     }
     if (raw->len<36+off) return 0; /* E5b I/NAV */
@@ -945,7 +946,7 @@ static int decode_enav(raw_t *raw, int sat, int off)
     page2=getbitu(buff,129,1);
     
     if (part1!=0||part2!=1) {
-        trace(3,"ubx rxmsfrbx enav page even/odd error: sat=%d\n",sat);
+        trace(3,"ubx rxmsfrbx inav page even/odd error: sat=%d\n",sat);
         return -1;
     }
     if (page1==1||page2==1) return 0; /* alert page */
@@ -954,7 +955,7 @@ static int decode_enav(raw_t *raw, int sat, int off)
     for (i=0,j=  4;i<15;i++,j+=8) setbitu(crc_buff,j,8,getbitu(buff   ,i*8,8));
     for (i=0,j=118;i<11;i++,j+=8) setbitu(crc_buff,j,8,getbitu(buff,i*8+128,8));
     if (rtk_crc24q(crc_buff,25)!=getbitu(buff,128+82,24)) {
-        trace(2,"ubx rxmsfrbx enav crc error: sat=%d\n",sat);
+        trace(2,"ubx rxmsfrbx inav crc error: sat=%d\n",sat);
         return -1;
     }
     type=getbitu(buff,2,6); /* word type */
@@ -972,7 +973,7 @@ static int decode_enav(raw_t *raw, int sat, int off)
     if (!decode_gal_inav(raw->subfrm[sat-1],&eph,ion,utc)) return 0;
         
     if (eph.sat!=sat) {
-        trace(2,"ubx rxmsfrbx enav satellite error: sat=%d %d\n",sat,eph.sat);
+        trace(2,"ubx rxmsfrbx inav satellite error: sat=%d %d\n",sat,eph.sat);
         return -1;
     }
     eph.code|=(1<<0); /* data source: E1 */
@@ -989,6 +990,57 @@ static int decode_enav(raw_t *raw, int sat, int off)
     raw->nav.eph[sat-1]=eph;
     raw->ephsat=sat;
     raw->ephset=0; /* 0:I/NAV */
+    return 2;
+}
+// Decode Galileo F/NAV navigation data --------------------------------------
+static int decode_fnav(raw_t *raw, int sat, int off)
+{
+    if (strstr(raw->opt, "-GALINAV")) return 0;
+
+    if (raw->len < 40 + off) {
+        trace(2,"ubx rxmsfrbx fnav length error: sat=%d len=%d\n", sat, raw->len);
+        return -1;
+    }
+
+    uint8_t buff[32];
+    for (int i = 0; i < 8; i++) {
+      setbitu(buff, 32 * i, 32, U4(raw->buff + 6 + off + 4 * i));  // 244 bits page.
+    }
+    int type = getbitu(buff, 0, 6);  // Page type.
+    if (type == 63) return 0;  // Dummy page.
+    if (type < 1 || type > 6) {
+      trace(2, "ubx rxmsfrbx fnav page type error: sat=%d type=%d\n", sat, type);
+      return -1;
+    }
+
+    // Save 244 bits page (31 bytes * 6 page).
+    memcpy(raw->subfrm[sat - 1] + 128 + (type - 1) * 31, buff, 31);
+
+    if (type != 4) return 0;
+    eph_t eph = {0};
+    double ion[4] = {0}, utc[8] = {0};
+    if (!decode_gal_fnav(raw->subfrm[sat - 1] + 128, &eph, ion, utc)) return 0;
+
+    if (eph.sat != sat) {
+        trace(2,"ubx rxmsfrbx fnav satellite error: sat=%d %d\n", sat, eph.sat);
+        return -1;
+    }
+    // Data source: E5a.
+    eph.code |= (1 << 1) | (1 << 8);
+
+    adj_utcweek(raw->time, utc);
+    matcpy(raw->nav.ion_gal, ion, 4, 1);
+    matcpy(raw->nav.utc_gal, utc, 8, 1);
+
+    if (!strstr(raw->opt, "-EPHALL")) {
+      if (eph.iode == raw->nav.eph[sat - 1 + MAXSAT].iode &&
+          fabs(timediff(eph.toe, raw->nav.eph[sat - 1 + MAXSAT].toe)) < 1e-9 &&
+          fabs(timediff(eph.toc, raw->nav.eph[sat - 1 + MAXSAT].toc)) < 1e-9)
+        return 0;
+    }
+    raw->nav.eph[sat - 1 + MAXSAT] = eph;
+    raw->ephsat = sat;
+    raw->ephset = 1;  // 1:F/NAV
     return 2;
 }
 /* decode BDS navigation data ------------------------------------------------*/
@@ -1162,7 +1214,17 @@ static int decode_rxmsfrbx(raw_t *raw)
     switch (sys) {
         case SYS_GPS: return decode_nav (raw,sat,8);
         case SYS_QZS: return decode_nav (raw,sat,8);
-        case SYS_GAL: return decode_enav(raw,sat,8);
+        case SYS_GAL:
+          if (U1(p + 2) == 8) {
+            // Signal E6B, E6 CNAV.
+            trace(3, "ubx rxmsfrbx Galileo E6 CNAV unsupported: sys=%d prn=%3d sigid=%d\n", U1(p), U1(p + 1), U1(p + 2));
+            return 0;
+          }
+          if (U1(p + 2) == 3) {
+            // Signal E5a, F/NAV
+            return decode_fnav(raw, sat, 8);
+          }
+          return decode_inav(raw, sat, 8);
         case SYS_CMP:
           if (U1(p + 2) == 6) {
             // Signal B1C, B-CNAV1.
@@ -1202,7 +1264,7 @@ static int decode_trksfrbx(raw_t *raw)
     switch (sys) {
         case SYS_GPS: return decode_nav (raw,sat,13);
         case SYS_QZS: return decode_nav (raw,sat,13);
-        case SYS_GAL: return decode_enav(raw,sat,13);
+        case SYS_GAL: return decode_inav(raw,sat,13);
         case SYS_CMP: return decode_cnav(raw,sat,13);
         case SYS_GLO: return decode_gnav(raw,sat,13,U1(p+4));
         case SYS_SBS: return decode_snav(raw,sat,13);
@@ -1353,7 +1415,9 @@ static int sync_ubx(uint8_t *buff, uint8_t data)
 *          -MAX_STD_CP=std: max std-dev of carrier phase
 *          -MULTICODE :  preserve multiple signal codes for single freq
 *          -RCVSTDS :  save receiver stdevs to unused rinex fields
-
+*          -GALINAV : select I/NAV for Galileo ephemeris (default: all)
+*          -GALFNAV : select F/NAV for Galileo ephemeris (default: all)
+*
 *
 *          The supported messages are as follows.
 *
