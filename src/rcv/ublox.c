@@ -1140,8 +1140,8 @@ static int decode_rxmsfrbx(raw_t *raw)
     trace(4,"decode_rxmsfrbx: len=%d\n",raw->len);
     
     if (raw->outtype) {
-        sprintf(raw->msgtype,"UBX RXM-SFRBX (%4d): sys=%d prn=%3d",raw->len,
-                U1(p),U1(p+1));
+        sprintf(raw->msgtype,"UBX RXM-SFRBX (%4d): sys=%d prn=%3d sigid=%d",raw->len,
+                U1(p),U1(p+1),U1(p+2));
     }
     if (!(sys=ubx_sys(U1(p)))) {
         trace(2,"ubx rxmsfrbx sys id error: sys=%d\n",U1(p));
@@ -1163,7 +1163,18 @@ static int decode_rxmsfrbx(raw_t *raw)
         case SYS_GPS: return decode_nav (raw,sat,8);
         case SYS_QZS: return decode_nav (raw,sat,8);
         case SYS_GAL: return decode_enav(raw,sat,8);
-        case SYS_CMP: return decode_cnav(raw,sat,8);
+        case SYS_CMP:
+          if (U1(p + 2) == 6) {
+            // Signal B1C, B-CNAV1.
+            trace(3, "ubx rxmsfrbx BDS B-CNAV1 unsupported: sys=%d prn=%3d sigid=%d\n", U1(p), U1(p + 1), U1(p + 2));
+            return 0;
+          }
+          if (U1(p + 2) == 8) {
+            // Signal B2a, B-CNAV2.
+            trace(3, "ubx rxmsfrbx BDS B-CNAV2 unsupported: sys=%d prn=%3d sigid=%d\n", U1(p), U1(p + 1), U1(p + 2));
+            return 0;
+          }
+          return decode_cnav(raw, sat, 8);
         case SYS_GLO: return decode_gnav(raw,sat,8,U1(p+3));
         case SYS_SBS: return decode_snav(raw,prn,8);
     }
