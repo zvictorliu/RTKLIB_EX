@@ -1028,18 +1028,20 @@ static int decode_cnav(raw_t *raw, int sat, int off)
         else return 0;
     }
     else { /* GEO */
-        pgn=getbitu(buff,42,4); /* page numuber */
-        
-        if (id==1&&pgn>=1&&pgn<=10) {
-            memcpy(raw->subfrm[sat-1]+(pgn-1)*38,buff,38);
-            if (pgn!=10) return 0;
-            if (!decode_bds_d2(raw->subfrm[sat-1],&eph,NULL)) return 0;
+        if (id == 1) {
+          pgn = getbitu(buff, 42, 4); // Page numuber.
+          if (pgn < 1 || pgn > 10) return 0;
+          memcpy(raw->subfrm[sat-1]+(pgn-1)*38,buff,38);
+          if (pgn!=10) return 0;
+          if (!decode_bds_d2(raw->subfrm[sat-1],&eph,NULL)) return 0;
         }
-        else if (id==5&&pgn==102) {
-            memcpy(raw->subfrm[sat-1]+10*38,buff,38);
-            if (!decode_bds_d2(raw->subfrm[sat-1],NULL,utc)) return 0;
-            matcpy(raw->nav.utc_cmp,utc,8,1);
-            return 9;
+        else if (id == 5) {
+          int pgn = getbitu(buff, 43, 7); // Page number.
+          if (pgn != 102) return 0;
+          memcpy(raw->subfrm[sat-1]+10*38,buff,38);
+          if (!decode_bds_d2(raw->subfrm[sat-1],NULL,utc)) return 0;
+          matcpy(raw->nav.utc_cmp,utc,8,1);
+          return 9;
         }
         else return 0;
     }
