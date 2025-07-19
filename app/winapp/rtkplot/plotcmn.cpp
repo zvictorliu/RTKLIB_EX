@@ -12,8 +12,9 @@ int showmsg(const char *format,...) {return 0;}
 }
 //---------------------------------------------------------------------------
 const char *PTypes[]={
-    "Gnd Trk","Position","Velocity","Accel","NSat","Residuals","Resid-EL",
-    "Sat Vis","Skyplot","DOP/NSat","SNR/MP/EL","SNR/MP-EL","MP-Skyplot",""
+  "Gnd Trk","Position","Velocity","Accel","NSat","Skyplot","DOP/NSat",
+  "Residuals","Resid-EL","Sat Vis","Skyplot obs","DOP/NSat obs","SNR/MP/EL",
+  "SNR/MP-EL","MP-Skyplot",""
 };
 // show message in status-bar -----------------------------------------------
 void __fastcall TPlot::ShowMsg(UTF8String msg)
