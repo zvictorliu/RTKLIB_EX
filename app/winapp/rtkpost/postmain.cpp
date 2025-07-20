@@ -1042,17 +1042,17 @@ int __fastcall TMainForm::GetOption(prcopt_t &prcopt, solopt_t &solopt,
     }
     else prcopt.refpos=RefPosType-1;
     
+    prcopt.antdel[0][0]=RovAntE;
+    prcopt.antdel[0][1]=RovAntN;
+    prcopt.antdel[0][2]=RovAntU;
     if (RovAntPcv) {
         strcpy(prcopt.anttype[0],RovAnt.c_str());
-        prcopt.antdel[0][0]=RovAntE;
-        prcopt.antdel[0][1]=RovAntN;
-        prcopt.antdel[0][2]=RovAntU;
     }
+    prcopt.antdel[1][0]=RefAntE;
+    prcopt.antdel[1][1]=RefAntN;
+    prcopt.antdel[1][2]=RefAntU;
     if (RefAntPcv) {
         strcpy(prcopt.anttype[1],RefAnt.c_str());
-        prcopt.antdel[1][0]=RefAntE;
-        prcopt.antdel[1][1]=RefAntN;
-        prcopt.antdel[1][2]=RefAntU;
     }
     if (ExSats!="") { // excluded satellites
         strcpy(buff,ExSats.c_str());

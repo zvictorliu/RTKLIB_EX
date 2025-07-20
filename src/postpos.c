@@ -925,8 +925,8 @@ static void closeses(nav_t *nav, pcvs_t *pcvs, pcvs_t *pcvr)
     trace(3,"closeses:\n");
 
     /* free antenna parameters */
-    free(pcvs->pcv); pcvs->pcv=NULL; pcvs->n=pcvs->nmax=0;
-    free(pcvr->pcv); pcvr->pcv=NULL; pcvr->n=pcvr->nmax=0;
+    free_pcvs(pcvs);
+    free_pcvs(pcvr);
 
     /* close geoid data */
     closegeoid();

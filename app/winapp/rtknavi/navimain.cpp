@@ -1126,8 +1126,8 @@ void __fastcall TMainForm::SvrStart(void)
     char file[1024],*type,errmsg[20148];
     FILE *fp;
     gtime_t time=timeget();
-    pcvs_t pcvr={0},pcvs={0};
-    pcv_t *pcv,pcv0={0};
+    pcvs_t pcvs={0};
+    pcv_t pcv0={0};
     
     trace(3,"SvrStart\n");
     
@@ -1172,49 +1172,56 @@ void __fastcall TMainForm::SvrStart(void)
             PrcOpt.exsats[sat-1]=ex;
         }
     }
-    if ((RovAntPcvF||RefAntPcvF)&&!readpcv(AntPcvFileF.c_str(),&pcvr)) {
+    if ((RovAntPcvF||RefAntPcvF)&&AntPcvFileF!=""&&!readpcv(AntPcvFileF.c_str(),&rtksvr.pcvsr)) {
+        if (SolOpt.trace>0) traceclose();
         Message->Caption=s.sprintf("rcv ant file read error %s",AntPcvFileF.c_str());
         Message->Hint=Message->Caption;
         return;
     }
     PrcOpt.pcvr[0]=PrcOpt.pcvr[1]=pcv0; // initialize antenna PCV
 
-    if (RovAntPcvF) {
+    for (i=0;i<3;i++) PrcOpt.antdel[0][i]=RovAntDel[i];
+    if (RovAntPcvF) strcpy(PrcOpt.anttype[0], RovAntF.c_str());
+    if (RovAntPcvF && RovAntF != "" && RovAntF != "*") {
         type=RovAntF.c_str();
-        if ((pcv=searchpcv(0,type,time,&pcvr))) {
+        pcv_t *pcv=searchpcv(0,type,time,&rtksvr.pcvsr);
+        if (pcv) {
             PrcOpt.pcvr[0]=*pcv;
         }
         else {
             Message->Caption=s.sprintf("no antenna pcv %s",type);
             Message->Hint=Message->Caption;
         }
-        for (i=0;i<3;i++) PrcOpt.antdel[0][i]=RovAntDel[i];
     }
-    if (RefAntPcvF) {
+
+    for (i=0;i<3;i++) PrcOpt.antdel[1][i]=RefAntDel[i];
+    if (RefAntPcvF) strcpy(PrcOpt.anttype[1], RefAntF.c_str());
+    if (RefAntPcvF && RefAntF != "" && RefAntF != "*") {
         type=RefAntF.c_str();
-        if ((pcv=searchpcv(0,type,time,&pcvr))) {
+        pcv_t *pcv=searchpcv(0,type,time,&rtksvr.pcvsr);
+        if (pcv) {
             PrcOpt.pcvr[1]=*pcv;
         }
         else {
             Message->Caption=s.sprintf("no antenna pcv %s",type);
             Message->Hint=Message->Caption;
         }
-        for (i=0;i<3;i++) PrcOpt.antdel[1][i]=RefAntDel[i];
     }
-    if (RovAntPcvF||RefAntPcvF) {
-        free(pcvr.pcv);
-    }
-    if (PrcOpt.sateph==EPHOPT_PREC||PrcOpt.sateph==EPHOPT_SSRCOM) {
-        if (!readpcv(SatPcvFileF.c_str(),&pcvs)) {
+
+    if (PrcOpt.sateph==EPHOPT_PREC||PrcOpt.sateph==EPHOPT_SSRCOM||PrcOpt.mode>=PMODE_PPP_KINEMA) {
+        if (SatPcvFileF!=""&&!readpcv(SatPcvFileF.c_str(),&pcvs)) {
+            if (SolOpt.trace>0) traceclose();
+            free_pcvs(&rtksvr.pcvsr);
             Message->Caption=s.sprintf("sat ant file read error %s",SatPcvFileF.c_str());
             Message->Hint=Message->Caption;
             return;
         }
         for (i=0;i<MAXSAT;i++) {
-            if (!(pcv=searchpcv(i+1,"",time,&pcvs))) continue;
+            pcv_t *pcv=searchpcv(i+1,"",time,&pcvs);
+            if (!pcv) continue;
             rtksvr.nav.pcvs[i]=*pcv;
         }
-        free(pcvs.pcv);
+        free_pcvs(&pcvs);
     }
     if (BaselineC) {
         PrcOpt.baseline[0]=Baseline[0];
@@ -1256,7 +1263,11 @@ void __fastcall TMainForm::SvrStart(void)
     strsetproxy(ProxyAddr.c_str());
     
     for (i=3;i<8;i++) {
-        if (strs[i]==STR_FILE&&!ConfOverwrite(paths[i])) return;
+      if (strs[i]==STR_FILE&&!ConfOverwrite(paths[i])) {
+        if (SolOpt.trace>0) traceclose();
+        free_pcvs(&rtksvr.pcvsr);
+        return;
+      }
     }
     if (SolOpt.sstat>0) {
         rtkopenstat(STATFILE,SolOpt.sstat);
@@ -1286,7 +1297,8 @@ void __fastcall TMainForm::SvrStart(void)
                      (const char **)rcvopts,NmeaCycle,NmeaReq,nmeapos,&PrcOpt,
                      solopt,&monistr,errmsg)) {
         trace(2,"rtksvrstart error %s\n",errmsg);
-        traceclose();
+        if (SolOpt.trace>0) traceclose();
+        free_pcvs(&rtksvr.pcvsr);
         return;
     }
     PSol=PSolS=PSolE=0;
@@ -1330,6 +1342,8 @@ void __fastcall TMainForm::SvrStop(void)
     }
     rtksvrstop(&rtksvr,(const char **)cmds);
     
+    free_pcvs(&rtksvr.pcvsr);
+
     BtnStart    ->Visible=true;
     BtnStart    ->Enabled=true;
     BtnOpt      ->Enabled=true;

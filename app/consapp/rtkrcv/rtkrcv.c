@@ -364,41 +364,69 @@ static int readcmd(const char *file, char *cmd, int type)
     fclose(fp);
     return 1;
 }
-/* read antenna file ---------------------------------------------------------*/
-static void readant(vt_t *vt, prcopt_t *opt, nav_t *nav)
-{
-    const pcv_t pcv0={0};
-    pcvs_t pcvr={0},pcvs={0};
-    pcv_t *pcv;
-    gtime_t time=timeget();
-    int i;
+/* Read antenna file ---------------------------------------------------------*/
+static void readant(vt_t *vt, prcopt_t *opt, nav_t *nav, pcvs_t *pcvsr) {
+  trace(3,"readant:\n");
     
-    trace(3,"readant:\n");
-    
-    opt->pcvr[0]=opt->pcvr[1]=pcv0;
-    if (!*filopt.rcvantp) return;
-    
-    if (readpcv(filopt.rcvantp,&pcvr)) {
-        for (i=0;i<2;i++) {
-            if (!*opt->anttype[i]) continue;
-            if (!(pcv=searchpcv(0,opt->anttype[i],time,&pcvr))) {
-                vt_printf(vt,"no antenna %s in %s",opt->anttype[i],filopt.rcvantp);
-                continue;
-            }
-            opt->pcvr[i]=*pcv;
+  const pcv_t pcv0 = {0};
+  opt->pcvr[0] = opt->pcvr[1] = pcv0;
+
+  if (*filopt.rcvantp) {
+    gtime_t time = timeget();
+    if (readpcv(filopt.rcvantp, pcvsr)) {
+      for (int i = 0; i < 2; i++) {
+        if (!*opt->anttype[i] || !strcmp(opt->anttype[i], "*")) continue;
+        pcv_t *pcv = searchpcv(0, opt->anttype[i], time, pcvsr);
+        if (!pcv) {
+          vt_printf(vt, "no antenna %s in %s", opt->anttype[i], filopt.rcvantp);
+          continue;
+         }
+        opt->pcvr[i] = *pcv;
+      }
+    } else
+      vt_printf(vt, "antenna file open error %s", filopt.rcvantp);
+  }
+
+  if (*filopt.satantp) {
+    pcvs_t pcvs = {0};
+    if (readpcv(filopt.satantp, &pcvs)) {
+      gtime_t time = timeget();
+#ifdef TRACE
+      int found[MAXSAT] = {0}, missing = 0;
+#endif
+      for (int i = 0; i < MAXSAT; i++) {
+        pcv_t *pcv = searchpcv(i + 1, "", time, &pcvs);
+        if (!pcv) {
+#ifdef TRACE
+          missing++;
+#endif
+          continue;
         }
-    }
-    else vt_printf(vt,"antenna file open error %s",filopt.rcvantp);
-    
-    if (readpcv(filopt.satantp,&pcvs)) {
-        for (i=0;i<MAXSAT;i++) {
-            if (!(pcv=searchpcv(i+1,"",time,&pcvs))) continue;
-            nav->pcvs[i]=*pcv;
+        nav->pcvs[i]=*pcv;
+#ifdef TRACE
+        found[i] = 1;
+#endif
+      }
+      free_pcvs(&pcvs);
+#ifdef TRACE
+      if (missing > 0) {
+        // Report satellites not found.
+        char satlst[MAXSAT * 4] = "", *p = satlst;
+        for (int i = 0; i < MAXSAT; i++) {
+          if (!found[i]) {
+            char id[8];
+            satno2id(i + 1, id);
+            int len = strlen(satlst);
+            if (len + strlen(id) > sizeof(satlst) - 1) continue;
+            p += sprintf(p, " %s", id);
+          }
         }
-    }
-    else vt_printf(vt,"antenna file open error %s",filopt.satantp);
-    
-    free(pcvr.pcv); free(pcvs.pcv);
+        trace(2, "Satellites missing pcv in %s:%s\n", filopt.satantp, satlst);
+      }
+#endif
+    } else
+      vt_printf(vt, "antenna file open error %s", filopt.satantp);
+  }
 }
 /* start rtk server ----------------------------------------------------------*/
 static int startsvr(vt_t *vt)
@@ -442,9 +470,9 @@ static int startsvr(vt_t *vt)
     pos[1]=nmeapos[1]*D2R;
     pos[2]=nmeapos[2];
     pos2ecef(pos,npos);
-    
+
     /* read antenna file */
-    readant(vt,&prcopt,&svr.nav);
+    readant(vt,&prcopt,&svr.nav,&svr.pcvsr);
     
     /* read dcb file */
     if (*filopt.dcb) {
@@ -488,6 +516,7 @@ static int startsvr(vt_t *vt)
                      solopt,&moni,errmsg)) {
         trace(2,"rtk server start error (%s)\n",errmsg);
         vt_printf(vt,"rtk server start error (%s)\n",errmsg);
+        free_pcvs(&svr.pcvsr);
         return 0;
     }
     return 1;
@@ -522,7 +551,9 @@ static void stopsvr(vt_t *vt)
     }
 #endif
     if (solopt[0].geoid>0) closegeoid();
-    
+
+    free_pcvs(&svr.pcvsr);
+
     vt_printf(vt,"stop rtk server\n");
 }
 /* print time ----------------------------------------------------------------*/
@@ -773,10 +804,10 @@ static void prstatus(vt_t *vt)
     vt_printf(vt,"%-28s: %d\n","# of average single pos base",nave);
     vt_printf(vt,"%-28s: %s\n","ant type rover",rtk->opt.pcvr[0].type);
     del=rtk->opt.antdel[0];
-    vt_printf(vt,"%-28s: %.3f %.3f %.3f\n","ant delta rover",del[0],del[1],del[2]);
+    vt_printf(vt,"%-28s: %.4f %.4f %.4f\n","ant delta rover",del[0],del[1],del[2]);
     vt_printf(vt,"%-28s: %s\n","ant type base" ,rtk->opt.pcvr[1].type);
     del=rtk->opt.antdel[1];
-    vt_printf(vt,"%-28s: %.3f %.3f %.3f\n","ant delta base",del[0],del[1],del[2]);
+    vt_printf(vt,"%-28s: %.4f %.4f %.4f\n","ant delta base",del[0],del[1],del[2]);
     ecef2enu(pos,rtk->rb+3,vel);
     vt_printf(vt,"%-28s: %.3f,%.3f,%.3f\n","vel enu (m/s) base",
             vel[0],vel[1],vel[2]);

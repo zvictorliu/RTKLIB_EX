@@ -1342,6 +1342,7 @@ typedef struct {        /* RTK server type */
     char cmds_periodic[3][MAXRCVCMD]; /* periodic commands */
     char cmd_reset[MAXRCVCMD]; /* reset command */
     double bl_reset;    /* baseline length to reset (km) */
+    pcvs_t pcvsr;       // Receiver antenna parameters.
     rtklib_lock_t lock; /* lock flag */
 } rtksvr_t;
 
@@ -1580,6 +1581,7 @@ EXPORT pcv_t *searchpcv(int sat, const char *type, gtime_t time,
 EXPORT void antmodel(const pcv_t *pcv, const double *del, const double *azel,
                      int opt, double *dant);
 EXPORT void antmodel_s(const pcv_t *pcv, double nadir, double *dant);
+EXPORT void free_pcvs(pcvs_t *pcvs);
 
 /* earth tide models ---------------------------------------------------------*/
 EXPORT void sunmoonpos(gtime_t tutc, const double *erpv, double *rsun,

@@ -353,23 +353,24 @@ extern void readsp3(const char *file, nav_t *nav, int opt)
 * return : status (1:ok,0:error)
 * notes  : only support antex format for the antenna parameter file
 *-----------------------------------------------------------------------------*/
-extern int readsap(const char *file, gtime_t time, nav_t *nav)
-{
-    pcvs_t pcvs={0};
-    pcv_t pcv0={0},*pcv;
-    int i;
+extern int readsap(const char *file, const gtime_t time, nav_t *nav) {
+  char tstr[40];
+  trace(3, "readsap : file=%s time=%s\n", file, time2str(time, tstr, 0));
 
-    char tstr[40];
-    trace(3,"readsap : file=%s time=%s\n",file,time2str(time,tstr,0));
+  pcvs_t pcvs = {0};
+  if (!readpcv(file, &pcvs)) return 0;
 
-    if (!readpcv(file,&pcvs)) return 0;
-
-    for (i=0;i<MAXSAT;i++) {
-        pcv=searchpcv(i+1,"",time,&pcvs);
-        nav->pcvs[i]=pcv?*pcv:pcv0;
+  for (int i = 0; i < MAXSAT; i++) {
+    pcv_t *pcv = searchpcv(i + 1, "", time, &pcvs);
+    if (pcv)
+      nav->pcvs[i] = *pcv;
+    else {
+      pcv_t pcv0 = {0};
+      nav->pcvs[i] = pcv0;
     }
-    free(pcvs.pcv);
-    return 1;
+  }
+  free_pcvs(&pcvs);
+  return 1;
 }
 /* read DCB parameters from DCB file -------------------------------------------
 *    - supports satellite and receiver biases
