@@ -1760,7 +1760,7 @@ static int resamb_LAMBDA(rtk_t *rtk, double *bias, double *xa,int gps,int glo,in
             /* generate adjusted AR ratio based on # of sat pairs */
             rtk->sol.thres = coeff[0];
             for (i=1;i<3;i++) {
-                rtk->sol.thres = rtk->sol.thres*1/(nb1+1)+coeff[i];
+                rtk->sol.thres = rtk->sol.thres*1.0/(nb1+1.0)+coeff[i];
             }
             rtk->sol.thres = MIN(MAX(rtk->sol.thres,opt->thresar[5]),opt->thresar[6]);
         } else
