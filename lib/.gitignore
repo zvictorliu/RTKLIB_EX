@@ -1,10 +1,2 @@
-# Ignore all files in the lib directory
-*
-
-# But not the following directories and files
-!.gitignore
-!iers
-!omf
-!openblas
-!sofa
-!CMakeLists.txt
+libRTKLib.so*
+librtklib.so

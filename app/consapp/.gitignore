@@ -1,12 +1,5 @@
-# Ignore all files in the lib directory
-*
-
-# But not the following directories and files
-!.gitignore
-!*.c
-!*.h
-!*.bat
-!*.sh
-!makefile
-!CMakeLists.txt
-!rtklib_consapp.groupproj
+convbin/gcc/convbin
+pos2kml/gcc/pos2kml
+rnx2rtkp/gcc/rnx2rtkp
+rtkrcv/gcc/rtkrcv
+str2str/gcc/str2str
