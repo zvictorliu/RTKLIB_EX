@@ -680,6 +680,28 @@ void __fastcall TMainForm::BtnKeywordClick(TObject *Sender)
 // callback on time-start/end check -----------------------------------------
 void __fastcall TMainForm::TimeStartClick(TObject *Sender)
 {
+    if (TimeStart->Checked && TimeEnd->Checked) {
+      // Initialize the start time to the end time if the start time
+      // has just been enabled and is out of order.
+      gtime_t ts=GetTime1(), te=GetTime2();
+      if (timediff(te, ts) < 0.0) {
+        TimeY1->Text = TimeY2->Text;
+        TimeH1->Text = TimeH2->Text;
+      }
+    }
+    UpdateEnable();
+}
+void __fastcall TMainForm::TimeEndClick(TObject *Sender)
+{
+    if (TimeStart->Checked && TimeEnd->Checked) {
+      // Initialize the end time to the start time if the end time has
+      // just been enabled and is out of order.
+      gtime_t ts=GetTime1(), te=GetTime2();
+      if (timediff(te, ts) < 0.0) {
+        TimeY2->Text = TimeY1->Text;
+        TimeH2->Text = TimeH1->Text;
+      }
+    }
     UpdateEnable();
 }
 // callback on time-interval check ------------------------------------------
