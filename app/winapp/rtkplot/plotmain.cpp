@@ -261,7 +261,7 @@ void __fastcall TPlot::FormShow(TObject *Sender)
         Connect();
     }
     else if (OpenFiles->Count<=0) {
-        Caption=Title!=""?Title:s.sprintf("%s ver.%s %s",PRGNAME,VER_RTKLIB,PATCH_LEVEL);
+        Caption=Title!=""?Title:s.sprintf("%s-%s %s",PRGNAME,VER_RTKLIB,PATCH_LEVEL);
     }
     if (ShapeFile!="") {
         TStringList *files=new TStringList;
@@ -884,7 +884,7 @@ void __fastcall TPlot::MenuMapViewClick(TObject *Sender)
     AnsiString s;
     
     MapView->Caption=
-        s.sprintf("%s ver.%s %s: Map View",PRGNAME,VER_RTKLIB,PATCH_LEVEL);
+        s.sprintf("%s-%s %s: Map View",PRGNAME,VER_RTKLIB,PATCH_LEVEL);
     MapView->Show();
 }
 // callback on menu-center-origin -------------------------------------------

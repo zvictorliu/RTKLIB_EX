@@ -87,7 +87,7 @@ void __fastcall TMainForm::FormCreate(TObject *Sender)
 	
 	strsvrinit(&strsvr,MAXSTR-1);
 	
-	Caption=s.sprintf("%s ver.%s %s",PRGNAME,VER_RTKLIB,PATCH_LEVEL);
+	Caption=s.sprintf("%s-%s %s",PRGNAME,VER_RTKLIB,PATCH_LEVEL);
 	
 	strcpy(buff,GetCommandLine());
 	

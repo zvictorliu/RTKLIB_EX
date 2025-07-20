@@ -925,7 +925,7 @@ int ppp=PosMode->ItemIndex>=PMODE_PPP_KINEMA;
 	strcpy(filopt.iono,   IonoFile_Text.c_str());
 	
 	time2str(utc2gpst(timeget()),s,0);
-	sprintf(comment,"rtkpost options (%s, v.%s %s)",s,VER_RTKLIB,PATCH_LEVEL);
+	sprintf(comment,"rtkpost options (%s-%s %s)",s,VER_RTKLIB,PATCH_LEVEL);
 	setsysopts(&prcopt,&solopt,&filopt);
 	if (!saveopts(file.c_str(),"w",comment,sysopts)) return;
 }

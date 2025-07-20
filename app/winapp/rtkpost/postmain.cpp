@@ -133,7 +133,7 @@ void __fastcall TMainForm::FormCreate(TObject *Sender)
 {
     AnsiString s;
     
-    Caption=s.sprintf("%s %s %s",PRGNAME,VER_RTKLIB,PATCH_LEVEL);
+    Caption=s.sprintf("%s-%s %s",PRGNAME,VER_RTKLIB,PATCH_LEVEL);
     
     ::DragAcceptFiles(Handle,true);
 }
@@ -1105,7 +1105,7 @@ int __fastcall TMainForm::GetOption(prcopt_t &prcopt, solopt_t &solopt,
     solopt.sstat    =DebugStatus;
     solopt.trace    =DebugTrace;
     strcpy(solopt.sep,FieldSep!=""?FieldSep.c_str():" ");
-    sprintf(solopt.prog,"%s %s %s",PRGNAME,VER_RTKLIB,PATCH_LEVEL);
+    sprintf(solopt.prog,"%s-%s %s",PRGNAME,VER_RTKLIB,PATCH_LEVEL);
     
     // file options
     strcpy(filopt.satantp,SatPcvFile.c_str());

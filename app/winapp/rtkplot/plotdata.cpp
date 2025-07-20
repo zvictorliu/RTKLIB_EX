@@ -1448,7 +1448,7 @@ void __fastcall TPlot::Clear(void)
     if (!ConnectState) {
         initsolbuf(SolData  ,0,0);
         initsolbuf(SolData+1,0,0);
-        Caption=Title!=""?Title:s.sprintf("%s ver.%s %s",PRGNAME,VER_RTKLIB,PATCH_LEVEL);
+        Caption=Title!=""?Title:s.sprintf("%s-%s %s",PRGNAME,VER_RTKLIB,PATCH_LEVEL);
     }
     else {
         initsolbuf(SolData  ,1,RtBuffSize+1);

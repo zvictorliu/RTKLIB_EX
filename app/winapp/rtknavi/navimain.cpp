@@ -149,7 +149,7 @@ __fastcall TMainForm::TMainForm(TComponent* Owner)
     strinit(&monistr);
     
     Caption=PRGNAME;
-    Caption=Caption+" ver."+VER_RTKLIB+" "+PATCH_LEVEL;
+    Caption=Caption+"-"+VER_RTKLIB+" "+PATCH_LEVEL;
     DoubleBuffered=true;
     
     PanelStack=PanelMode=0;
@@ -2197,7 +2197,7 @@ void __fastcall TMainForm::OpenMoniPort(int port)
         
         if (stropen(&monistr,STR_TCPSVR,STR_MODE_RW,path)) {
             strsettimeout(&monistr,TimeoutTime,ReconTime);
-            if (i>0) Caption=s.sprintf("%s ver.%s %s (%d)",PRGNAME,VER_RTKLIB,PATCH_LEVEL,i+1);
+            if (i>0) Caption=s.sprintf("%s-%s %s (%d)",PRGNAME,VER_RTKLIB,PATCH_LEVEL,i+1);
             OpenPort=port+i;
             return;
         }
@@ -2264,7 +2264,7 @@ void __fastcall TMainForm::SaveLog(void)
     opt=SolOpt;
     opt.posf=posf[SolType];
     if (SolOpt.outhead) {
-        fprintf(fp,"%% program   : %s ver.%s %s\n",PRGNAME,VER_RTKLIB,PATCH_LEVEL);
+        fprintf(fp,"%% program   : %s-%s %s\n",PRGNAME,VER_RTKLIB,PATCH_LEVEL);
         if (PrcOpt.mode>=PMODE_DGPS && PrcOpt.mode<=PMODE_FIXED) {
             ecef2pos(PrcOpt.rb,pos);
             fprintf(fp,"%% ref pos   :%13.9f %14.9f %10.4f\n",pos[0]*R2D,
