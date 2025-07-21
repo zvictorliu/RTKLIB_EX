@@ -1270,32 +1270,30 @@ void Plot::updateObservation(int nobs)
 // update Multipath ------------------------------------------------------------
 void Plot::updateMp()
 {
-    obsd_t *data;
-    double freq1, freq2, freq, I, B;
-    int i, j, k, m, n, per, per_ = -1;
-
     trace(3, "updateMp\n");
 
-    for (i = 0; i < NFREQ + NEXOBS; i++) {
+    for (int i = 0; i < NFREQ + NEXOBS; i++) {
         delete [] multipath[i];
         multipath[i] = NULL;
     }
     if (observation.n <= 0) return;
 
-    for (i = 0; i < NFREQ + NEXOBS; i++) {
+    for (int i = 0; i < NFREQ + NEXOBS; i++) {
         multipath[i] = new double[observation.n];
-        for (j = 0; j < observation.n; j++) multipath[i][j] = 0.0;
+        for (int j = 0; j < observation.n; j++) multipath[i][j] = 0.0;
     }
     readWaitStart();
     showLegend(QStringList());
 
-    for (i = 0; i < observation.n; i++) {
-        data = observation.data + i;
-        /* choose two frequencies to calculate reference I */
-        for (j = 0; j < NFREQ + NEXOBS; j++) {
+    int per_ = -1;
+    for (int i = 0; i < observation.n; i++) {
+        obsd_t *data = observation.data + i;
+        // Choose two frequencies to calculate reference I.
+        double freq1 = 0.0, freq2 = 0.0, I = 0.0;
+        for (int j = 0; j < NFREQ + NEXOBS; j++) {
             freq1 = sat2freq(data->sat, data->code[j], &navigation);
             if (data->L[j] == 0.0 || freq1 == 0.0 ) continue;
-            for (k = j + 1; k < NFREQ + NEXOBS; k++) {
+            for (int k = j + 1; k < NFREQ + NEXOBS; k++) {
                 freq2 = sat2freq(data->sat, data->code[k], &navigation);
                 if (data->L[k] == 0.0 || freq2 == 0.0 || freq1 == freq2) continue;
                 I = -CLIGHT * (data->L[j] / freq1-data->L[k] / freq2) / (1.0 - SQR(freq1 / freq2));
@@ -1305,12 +1303,12 @@ void Plot::updateMp()
         }
         if (freq1 == 0.0 || freq2 == 0.0) continue;
 
-        for (j = 0; j < NFREQ + NEXOBS; j++) {
-            freq = sat2freq(data->sat, data->code[j], &navigation);
+        for (int j = 0; j < NFREQ + NEXOBS; j++) {
+            double freq = sat2freq(data->sat, data->code[j], &navigation);
             if (data->P[j] == 0.0 || data->L[j] == 0.0 || freq == 0.0) continue;
             multipath[j][i] = data->P[j] - CLIGHT * data->L[j] / freq - 2.0 * SQR(freq1 / freq) * I;
         }
-        per = i * 100 / observation.n;
+        int per = i * 100 / observation.n;
         if (per != per_) {
             showMessage(tr("Updating multipath (1/2)... %1%").arg(per));
             per_ = per;
@@ -1318,25 +1316,27 @@ void Plot::updateMp()
         }
 
     }
-    for (uint8_t sat = 1; sat <= MAXSAT; sat++) {
-        for (j = 0; j < NFREQ + NEXOBS; j++) {
-            for (i = n = m = 0, B = 0.0; i < observation.n; i++) {
-                data = observation.data + i;
+    for (int sat = 1; sat <= MAXSAT; sat++) {
+        for (int j = 0; j < NFREQ + NEXOBS; j++) {
+            double B = 0.0;
+            int m = 0;
+            for (int i = 0, n = 0; i < observation.n; i++) {
+                obsd_t *data = observation.data + i;
                 if (data->sat != sat) continue;
                 if ((data->LLI[j] & 1) || (data->LLI[0] & 1) || (data->LLI[1] & 1)||
                     fabs(multipath[j][i] - B) > 5.0) {
-                    for (k = m; k < i; k++) {
+                    for (int k = m; k < i; k++) {
                         if (observation.data[k].sat == sat && multipath[j][k] != 0.0) multipath[j][k] -= B;
                     }
                     n = 0; m = i; B = 0.0;
                 }
                 if (multipath[j][i] != 0.0) B += (multipath[j][i] - B) / ++n;
             }
-            for (k = m; k < observation.n; k++) {
+            for (int k = m; k < observation.n; k++) {
                 if (observation.data[k].sat == sat && multipath[j][k] != 0.0) multipath[j][k] -= B;
             }
         }
-        per = sat * 100 / MAXSAT;
+        int per = sat * 100 / MAXSAT;
         if (per != per_) {
             showMessage(tr("Updating multipath (2/2)... %1%").arg(per));
             per_ = per;
