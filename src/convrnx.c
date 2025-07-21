@@ -94,6 +94,7 @@ static const int navsys[RNX_NUMSYS]={     /* system codes */
 
 // Supported obs-type by RINEX version.
 static const char ver3code[][MAXCODE] = {
+  // clang-format off
   // 0........1.........2.........3.........4.........5.........6.........7
   // 1111111111111222222222255577766666668882266333115559999155567778844466 CODE
   // CPWYMNSLEABXZCDSLXPWYMNIQXIQXABCXZSLIQXIQIQIQXIQABCABCXDDPZEDPZDPABXDP
@@ -104,8 +105,10 @@ static const char ver3code[][MAXCODE] = {
     "0......................000............................................", // SBS
     ".4...455.4.45....1.......41114..15....41111............444..44444...55", // BDS
     ".........................3......................3333333..............."  // IRN
+  // clang-format on
 };
 static const char ver4code[][MAXCODE] = {
+  // clang-format off
   // 0........1.........2.........3.........4.........5.........6.........7
   // 1111111111111222222222255577766666668882266333115559999155567778844466 CODE
   // CPWYMNSLEABXZCDSLXPWYMNIQXIQXABCXZSLIQXIQIQIQXIQABCABCXDDPZEDPZDPABXDP
@@ -116,6 +119,7 @@ static const char ver4code[][MAXCODE] = {
     "0......................000............................................", // SBS
     ".0....00...00....0.......0000...00....00000............000..00000...00", // BDS
     ".1.........1.............0......................00000001.............."  // IRN
+  // clang-format on
 };
 
 /* convert RINEX obs-type ver.3 -> ver.2 -------------------------------------*/
