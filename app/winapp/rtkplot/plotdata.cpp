@@ -1282,33 +1282,30 @@ void __fastcall TPlot::UpdateObs(int nobs)
 // update Multipath ------------------------------------------------------------
 void __fastcall TPlot::UpdateMp(void)
 {
-    AnsiString s;
-    obsd_t *data;
-    double freq1,freq2,freq,I,B;
-    int i,j,k,m,n,sat,per,per_=-1;
-    
     trace(3,"UpdateMp\n");
     
-    for (i=0;i<NFREQ+NEXOBS;i++) {
+    for (int i=0;i<NFREQ+NEXOBS;i++) {
         delete [] Mp[i];
         Mp[i]=NULL;
     }
     if (Obs.n<=0) return;
     
-    for (i=0;i<NFREQ+NEXOBS;i++) {
+    for (int i=0;i<NFREQ+NEXOBS;i++) {
         Mp[i]=new double[Obs.n];
-        for (j=0;j<Obs.n;j++) Mp[i][j]=0.0;
+        for (int j=0;j<Obs.n;j++) Mp[i][j]=0.0;
     }
     ReadWaitStart();
     ShowLegend(NULL);
     
-    for (i=0;i<Obs.n;i++) {
-        data=Obs.data+i;
-	/* choose two frequencies to calculate reference I */
-        for (j = 0; j < NFREQ + NEXOBS; j++) {
+    int per_ = -1;
+    for (int i=0;i<Obs.n;i++) {
+        obsd_t *data=Obs.data+i;
+	// Choose two frequencies to calculate reference I.
+        double freq1 = 0.0, freq2 = 0.0, I = 0.0;
+        for (int j = 0; j < NFREQ + NEXOBS; j++) {
             freq1 = sat2freq(data->sat, data->code[j], &Nav);
             if (data->L[j] == 0.0 || freq1 == 0.0 ) continue;
-            for (k = j + 1; k < NFREQ + NEXOBS; k++) {
+            for (int k = j + 1; k < NFREQ + NEXOBS; k++) {
                 freq2 = sat2freq(data->sat, data->code[k], &Nav);
                 if (data->L[k] == 0.0 || freq2 == 0.0 || freq1 == freq2) continue;
                 I = -CLIGHT * (data->L[j] / freq1-data->L[k] / freq2) / (1.0 - SQR(freq1 / freq2));
@@ -1318,32 +1315,35 @@ void __fastcall TPlot::UpdateMp(void)
         }
         if (freq1 == 0.0 || freq2 == 0.0) continue;
 
-        for (j=0;j<NFREQ+NEXOBS;j++) {
-            freq=sat2freq(data->sat,data->code[j],&Nav);
+        for (int j=0;j<NFREQ+NEXOBS;j++) {
+            double freq=sat2freq(data->sat,data->code[j],&Nav);
             if (data->P[j]==0.0||data->L[j]==0.0||freq==0.0) continue;
             Mp[j][i]=data->P[j]-CLIGHT*data->L[j]/freq-2.0*SQR(freq1/freq)*I;
         }
     }
-    for (sat=1;sat<=MAXSAT;sat++) {
-        for (j=0;j<NFREQ+NEXOBS;j++) {
-            for (i=n=m=0,B=0.0;i<Obs.n;i++) {
-                data=Obs.data+i;
+    for (int sat=1;sat<=MAXSAT;sat++) {
+        for (int j=0;j<NFREQ+NEXOBS;j++) {
+            double B = 0.0;
+            int m = 0;
+            for (int i=0, n=0;i<Obs.n;i++) {
+                obsd_t *data=Obs.data+i;
                 if (data->sat!=sat) continue;
                 if ((data->LLI[j]&1)||(data->LLI[0]&1)||(data->LLI[1]&1)||
                     fabs(Mp[j][i]-B)>5.0) {
-                    for (k=m;k<i;k++) {
+                    for (int k=m;k<i;k++) {
                         if (Obs.data[k].sat==sat&&Mp[j][k]!=0.0) Mp[j][k]-=B;
                     }
                     n=0; m=i; B=0.0;
                 }
                 if (Mp[j][i]!=0.0) B+=(Mp[j][i]-B)/++n;
             }
-            for (k=m;k<Obs.n;k++) {
+            for (int k=m;k<Obs.n;k++) {
                 if (Obs.data[k].sat==sat&&Mp[j][k]!=0.0) Mp[j][k]-=B;
             }
         }
-        per=sat*100/MAXSAT;
+        int per=sat*100/MAXSAT;
         if (per!=per_) {
+            AnsiString s;
             ShowMsg(s.sprintf("updating multipath... (%d%%)",(per_=per)));
             Application->ProcessMessages();
         }
