@@ -45,13 +45,11 @@ PlotOptDialog::PlotOptDialog(QWidget *parent)
 
     refDialog = new RefDialog(this, 1);
 
-    QCompleter *fileCompleter = new QCompleter(this);
-    QFileSystemModel *fileModel = new QFileSystemModel(fileCompleter);
+    QFileSystemModel *fileModel = new QFileSystemModel(this);
     fileModel->setRootPath("");
-    fileCompleter->setModel(fileModel);
-    ui->lETLEFile->setCompleter(fileCompleter);
-    ui->lETLESatelliteFile->setCompleter(fileCompleter);
-    ui->lEShapeFile->setCompleter(fileCompleter);
+    ui->lETLEFile->setCompleter(new QCompleter(fileModel, this));
+    ui->lETLESatelliteFile->setCompleter(new QCompleter(fileModel, this));
+    ui->lEShapeFile->setCompleter(new QCompleter(fileModel, this));
 
     QAction * acTLEFileOpen = ui->lETLEFile->addAction(QIcon(":/buttons/folder"), QLineEdit::TrailingPosition);
     acTLEFileOpen->setToolTip(tr("Select TLE file"));

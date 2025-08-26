@@ -197,17 +197,15 @@ OptDialog::OptDialog(QWidget *parent, int opts)
 	}
 
     // set up completers
-    QCompleter *fileCompleter = new QCompleter(this);
-    QFileSystemModel *fileModel = new QFileSystemModel(fileCompleter);
+    QFileSystemModel *fileModel = new QFileSystemModel(this);
     fileModel->setRootPath("");
-    fileCompleter->setModel(fileModel);
-    ui->lEStationPositionFile->setCompleter(fileCompleter);
-    ui->lEAntennaPcvFile->setCompleter(fileCompleter);
-    ui->lESatellitePcvFile->setCompleter(fileCompleter);
-    ui->lEDCBFile->setCompleter(fileCompleter);
-    ui->lEGeoidDataFile->setCompleter(fileCompleter);
-    ui->lEEOPFile->setCompleter(fileCompleter);
-    ui->lEBLQFile->setCompleter(fileCompleter);
+    ui->lEStationPositionFile->setCompleter(new QCompleter(fileModel, this));
+    ui->lEAntennaPcvFile->setCompleter(new QCompleter(fileModel, this));
+    ui->lESatellitePcvFile->setCompleter(new QCompleter(fileModel, this));
+    ui->lEDCBFile->setCompleter(new QCompleter(fileModel, this));
+    ui->lEGeoidDataFile->setCompleter(new QCompleter(fileModel, this));
+    ui->lEEOPFile->setCompleter(new QCompleter(fileModel, this));
+    ui->lEBLQFile->setCompleter(new QCompleter(fileModel, this));
 
     QCompleter *dirCompleter = new QCompleter(this);
     QFileSystemModel *dirModel = new QFileSystemModel(dirCompleter);
@@ -691,7 +689,7 @@ void OptDialog::updateOptions()
     if (ui->cBNavSys6->isChecked()) processingOptions.navsys |= SYS_CMP;
     if (ui->cBNavSys7->isChecked()) processingOptions.navsys |= SYS_IRN;
     processingOptions.elmin = ui->cBElevationMask->currentText().toDouble() * D2R;
-    // snrmask: already set by calling mask dialog
+    processingOptions.snrmask = snrmask;
     processingOptions.sateph = ui->cBSatelliteEphemeris->currentIndex();
     processingOptions.modear = ui->cBAmbiguityResolution->currentIndex();
     processingOptions.glomodear = ui->cBAmbiguityResolutionGLO->currentIndex();
@@ -806,7 +804,7 @@ void OptDialog::updateOptions()
         QMessageBox::warning(this, tr("Error"), tr("Antenna file read error: \"%1\"").arg(fileOptions.rcvantp));
         return;
     }
-    if (ui->cBRoverAntennaPcv->isChecked() && processingOptions.anttype[0] != QStringLiteral("") &&
+    if (ui->cBRoverAntennaPcv->isChecked() && processingOptions.anttype[0] != QLatin1String("") &&
         processingOptions.anttype[0] != QStringLiteral("*")) {
         pcv_t *pcv = searchpcv(0, processingOptions.anttype[0], time, &pcvr);
         if (pcv)
@@ -814,7 +812,7 @@ void OptDialog::updateOptions()
         else
             QMessageBox::warning(this, tr("Error"), tr("No rover antenna PCV: \"%1\"").arg(processingOptions.anttype[0]));
     }
-    if (ui->cBReferenceAntennaPcv->isChecked() && processingOptions.anttype[1] != QStringLiteral("") &&
+    if (ui->cBReferenceAntennaPcv->isChecked() && processingOptions.anttype[1] != QLatin1String("") &&
         processingOptions.anttype[1] != QStringLiteral("*")) {
         pcv_t *pcv = searchpcv(0, processingOptions.anttype[1], time, &pcvr);
         if (pcv)
@@ -2026,6 +2024,7 @@ QString OptDialog::excludedSatellitesString(const prcopt_t *prcopt)
 //---------------------------------------------------------------------------
 bool OptDialog::fillExcludedSatellites(prcopt_t *prcopt, const QString &excludedSatellites)
 {
+    memset(prcopt->exsats, 0, MAXSAT);  // reset mask
     if (!excludedSatellites.isEmpty()) {
         foreach (QString sat, excludedSatellites.split(' ')) {
             unsigned char ex;
