@@ -48,9 +48,9 @@
 # define MAX_GDOP   30          /* max gdop for valid solution  */
 
 /* pseudorange measurement error variance ------------------------------------*/
-static double varerr(const prcopt_t *opt, const ssat_t *ssat, const obsd_t *obs, double el, int sys)
+static double varerr(const prcopt_t *opt, const obsd_t *obs, double el, int sys)
 {
-    double fact=1.0,varr,snr_rover;
+    double fact=1.0,varr;
 
     switch (sys) {
         case SYS_GPS: fact *= EFACT_GPS; break;
@@ -62,11 +62,10 @@ static double varerr(const prcopt_t *opt, const ssat_t *ssat, const obsd_t *obs,
         default:      fact *= EFACT_GPS; break;
     }
     if (el<MIN_EL) el=MIN_EL;
-    /* var = R^2*(a^2 + (b^2/sin(el) + c^2*(10^(0.1*(snr_max-snr_rover)))) + (d*rcv_std)^2) */
+    /* var = R^2*(a^2 + (b^2/sin(el) + c^2*(10^(0.1*(snr_max-snr)))) + (d*rcv_std)^2) */
     varr=SQR(opt->err[1])+SQR(opt->err[2])/sin(el);
     if (opt->err[6]>0.0) {  /* if snr term not zero */
-        snr_rover=(ssat)?ssat->snr_rover[0]:opt->err[5];
-        varr+=SQR(opt->err[6])*pow(10,0.1*MAX(opt->err[5]-snr_rover,0));
+        varr+=SQR(opt->err[6])*pow(10,0.1*MAX(opt->err[5]-obs->SNR[0],0));
     }
     varr*=SQR(opt->eratio[0]);
     if (opt->err[7]>0.0) {
@@ -362,10 +361,7 @@ static int rescode(int iter, const obsd_t *obs, int n, const double *rs,
         
         /* variance of pseudorange error */
         var[nv]=vare[i]+vmeas+vion+vtrp;
-        if (ssat)
-            var[nv++]+=varerr(opt,&ssat[i],&obs[i],azel[1+i*2],sys);
-        else
-            var[nv++]+=varerr(opt,NULL,&obs[i],azel[1+i*2],sys);
+        var[nv++]+=varerr(opt,&obs[i],azel[1+i*2],sys);
         trace(4,"sat=%2d azel=%5.1f %4.1f res=%7.3f sig=%5.3f\n",obs[i].sat,
               azel[i*2]*R2D,azel[1+i*2]*R2D,resp[i],sqrt(var[nv-1]));
     }
