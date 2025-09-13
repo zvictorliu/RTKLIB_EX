@@ -2488,8 +2488,9 @@ extern int outrnxobsb(FILE *fp, const rnxopt_t *opt, const obsd_t *obs, int n,
                 case 'C':
                 case 'P': {
                   // To RTKLib RINEX encoding
-                  int pstdi = log2(obs[ind[i]].Pstd[k] * 100) - 5 + 0.5;
-                  outrnxobsf(fp,obs[ind[i]].P[k],-1,pstdi);
+                  float std = obs[ind[i]].Pstd[k];
+                  int stdi = std > 0.0003125 ? log2(std * 100) - 5 + 0.5 : 0;
+                  outrnxobsf(fp,obs[ind[i]].P[k],-1,stdi);
                   break;
                 }
                 case 'L': {
