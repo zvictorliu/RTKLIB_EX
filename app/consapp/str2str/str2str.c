@@ -47,7 +47,7 @@ static volatile int intrflg=0;         /* interrupt flag */
 /* help text -----------------------------------------------------------------*/
 static const char *help[]={
 "",
-" usage: str2str [-in stream] [-out stream [-out stream...]] [options]",
+" usage: str2str [-in stream] [[-msg ...] -out stream [-out stream...]] [options]",
 "",
 " Input data from a stream and divide and output them to multiple streams.",
 " The input stream can be serial, tcp client, tcp server, ntrip client, or",
